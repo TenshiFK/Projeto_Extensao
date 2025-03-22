@@ -35,10 +35,11 @@ export default function SideNav() {
         <button onClick={() => setMenuOpen(false)}><NavLinks/></button >
         
         <form className='flex flex-col items-center justify-center md:pr-3'>
-          <button onClick={() => 
-            signOut(auth)
-           } 
-           className="flex h-10 w-40 grow items-center justify-center gap-2 rounded-full bg-gray-50 p-3 text-sm font-medium hover:bg-blue-100 hover:text-blue-800 md:flex-none md:p-2 md:px-3">
+          <button onClick={() => {
+        signOut(auth)
+        sessionStorage.removeItem('user') 
+        }}
+        className="flex h-10 w-40 grow items-center justify-center gap-2 rounded-full bg-gray-50 p-3 text-sm font-medium hover:bg-blue-100 hover:text-blue-800 md:flex-none md:p-2 md:px-3">
             <Link href="/">
                 <div className='text-base font-semibold'>Sair</div>
             </Link>

@@ -1,18 +1,21 @@
 'use client';
-import { useAuthState } from "react-firebase-hooks/auth";
 import SideNav from "../components/SideNav";
+import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/firebase/firebaseconfig";
 import { useRouter } from "next/navigation";
+
 
  
 export default function Layout({ children }: { children: React.ReactNode }) {
 
   const [user] = useAuthState(auth); //para autenticações, serve para prevenir usuarios não logados de ver a homepage.
-  const router = useRouter()
+  const router = useRouter();
   const userSession = sessionStorage.getItem('user');
+  
+  console.log({user})
 
-  if(!user){
-    return router.push('/')
+  if (!user && !userSession){
+    router.push('/')
   }
 
   return (

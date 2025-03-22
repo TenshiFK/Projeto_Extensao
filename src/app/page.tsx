@@ -11,10 +11,6 @@ export default function Home() {
   const [user] = useAuthState(auth); //para autenticações, serve para prevenir usuarios não logados de ver a homepage.
   const router = useRouter()
 
-  if(user){
-    return router.push('home')
-  }
-
     return (
         <div className="bg-body-blue flex h-screen flex-col md:flex-row md:overflow-hidden items-center justify-center p-10 sm:p-16">
           <div className='flex flex-col items-center justify-center'>

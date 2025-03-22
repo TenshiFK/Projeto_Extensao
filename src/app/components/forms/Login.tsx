@@ -1,7 +1,7 @@
 'use client';
 import { EnvelopeIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import { useCreateUserWithEmailAndPassword, useSignInWithEmailAndPassword} from "react-firebase-hooks/auth"; //cria um usuario, talvez não queremos isso.
+import { useAuthState, useCreateUserWithEmailAndPassword, useSignInWithEmailAndPassword} from "react-firebase-hooks/auth"; //cria um usuario, talvez não queremos isso.
 import { auth } from '@/app/firebase/firebaseconfig';
 import { useRouter } from "next/navigation";
  
@@ -36,6 +36,7 @@ export function LoginForm() {
       //reseta para nulo apos mandar resposta.
       setEmail('');
       setPassword('');
+      sessionStorage.setItem('user', 'true')
       router.push('home');
     } catch(error){
       console.error(error); //pega quaisquer erro e nos manda no console.
