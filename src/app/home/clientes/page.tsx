@@ -4,6 +4,98 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 
 export default async function Page() {
 
+  const titlesHead = [
+    {
+      name: 'Nome do cliente',
+    },
+    {
+      name: 'Telefone/Celular',
+    },
+    {
+      name: 'Email',
+    },
+    {
+      name: 'Tipo de cliente',
+    },
+    {
+      name: 'Ações',
+    },
+]
+
+const dataBody = [
+  {
+    id: 1,
+    nome: 'João da Silva',
+    telefone: '11 99999-9999',
+    email: 'teste@teste.com',
+    tipo: 'Tercerizado',
+  },
+  {
+    id: 2,
+    nome: 'Maria da Silva',
+    telefone: '11 99999-9999',
+    email: '123@teste.com',
+    tipo: 'Tercerizado',
+  },
+  {
+    id: 3,
+    nome: 'José da Silva',
+    telefone: '11 99999-9999',
+    email: 'teste@teste.com',
+    tipo: 'Refrigeração',
+  },
+  {
+    id: 4,
+    nome: 'João da Silva',
+    telefone: '11 99999-9999',
+    email: 'teste@teste.com',
+    tipo: 'Tercerizado',
+  },
+  {
+    id: 5,
+    nome: 'Maria da Silva',
+    telefone: '11 99999-9999',
+    email: '',
+    tipo: 'Refrigeração',
+  },
+  {
+    id: 6,
+    nome: 'João da Silva',
+    telefone: '11 99999-9999',
+    email: 'teste@teste.com',
+    tipo: 'Tercerizado',
+  },
+  {
+    id: 7,
+    nome: 'Maria da Silva',
+    telefone: '11 99999-9999',
+    email: '123@teste.com',
+    tipo: 'Tercerizado',
+  },
+  {
+    id: 8,
+    nome: 'José da Silva',
+    telefone: '11 99999-9999',
+    email: 'teste@teste.com',
+    tipo: 'Refrigeração',
+  },
+  {
+    id: 9,
+    nome: 'João da Silva',
+    telefone: '11 99999-9999',
+    email: 'teste@teste.com',
+    tipo: 'Tercerizado',
+  },
+  {
+    id: 10,
+    nome: 'Maria da Silva',
+    telefone: '11 99999-9999',
+    email: '',
+    tipo: 'Refrigeração',
+  }
+]
+
+
     return (
         <main>
           <div className="flex flex-col md:flex-row md:items-center">
@@ -18,7 +110,7 @@ export default async function Page() {
             
           </div>
           <div className="mt-16">
-            <Tables/>
+            <Tables titlesHead={titlesHead} dataBody={dataBody} basePath="/clientes"/>
           </div>
         </main>
     );

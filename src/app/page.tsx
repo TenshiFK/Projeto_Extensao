@@ -1,16 +1,10 @@
-'use client';
 import Image from 'next/image';
 import Img1 from './assets/imgs/img.png';
 import { LoginForm } from './components/forms/Login';
-import { auth } from "@/app/firebase/firebaseconfig";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { useRouter } from "next/navigation";
 
 export default function Home() {
 
-  const [user] = useAuthState(auth); //para autenticações, serve para prevenir usuarios não logados de ver a homepage.
-  const router = useRouter()
-
+  
     return (
         <div className="bg-body-blue flex h-screen flex-col md:flex-row md:overflow-hidden items-center justify-center p-10 sm:p-16">
           <div className='flex flex-col items-center justify-center'>

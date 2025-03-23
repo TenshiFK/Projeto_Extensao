@@ -15,7 +15,9 @@ const firebaseConfig = {
 
 };  
 
-const firebaseApp = !getApps().lenght ? initializeApp(firebaseConfig) : getApp(); //checa e inicia os apps para deixar o rendering no lado do servidor.
+const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp(); //checa e inicia os apps para deixar o rendering no lado do servidor.
 const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp);
 
-export { firebaseApp, auth};
+export { firebaseApp, auth, db, storage};

@@ -1,4 +1,6 @@
+'use client';
 import "./assets/styles/global.css";
+import { AuthProvider } from "./contexts/authContext";
 
 
 export default function RootLayout({
@@ -9,7 +11,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="antialiased">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

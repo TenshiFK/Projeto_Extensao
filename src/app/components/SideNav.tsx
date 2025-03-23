@@ -6,12 +6,23 @@ import Logo from '../assets/imgs/Logo.png';
 import Image from 'next/image';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
-import { auth } from '@/app/firebase/firebaseconfig'
-import { signOut } from 'firebase/auth';
+import { useAuth } from '../contexts/authContext';
+import { useRouter } from 'next/navigation';
 
 
 export default function SideNav() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await logout(); // Realiza o logout
+      router.push('/'); // Redireciona para a página inicial
+    } catch (error) {
+      console.error("Erro ao fazer logout", error);
+    }
+  };
 
   return (
     <div className="flex h-full w-full flex-col py-4 bg-main-blue">
@@ -35,14 +46,11 @@ export default function SideNav() {
         <button onClick={() => setMenuOpen(false)}><NavLinks/></button >
         
         <form className='flex flex-col items-center justify-center md:pr-3'>
-          <button onClick={() => {
-        signOut(auth)
-        sessionStorage.removeItem('user') 
-        }}
-        className="flex h-10 w-40 grow items-center justify-center gap-2 rounded-full bg-gray-50 p-3 text-sm font-medium hover:bg-blue-100 hover:text-blue-800 md:flex-none md:p-2 md:px-3">
-            <Link href="/">
-                <div className='text-base font-semibold'>Sair</div>
-            </Link>
+          <button 
+          className="cursor-pointer flex h-10 w-40 grow items-center justify-center gap-2 rounded-full bg-gray-50 p-3 text-sm font-medium hover:bg-blue-100 hover:text-blue-800 md:flex-none md:p-2 md:px-3"
+          onClick={handleLogout}
+          type='button'>
+              <div className='text-base font-semibold'>Sair</div>
           </button>
         </form>
       </div>

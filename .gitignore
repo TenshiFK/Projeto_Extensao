@@ -31,7 +31,6 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-# .env* //deixar os env files, para mudança de dados.
 
 # vercel
 .vercel

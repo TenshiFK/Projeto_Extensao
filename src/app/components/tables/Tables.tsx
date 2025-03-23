@@ -1,29 +1,65 @@
+'use client';
+import { EyeIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { useRouter } from "next/navigation";
 
 
-export default async function Tables() {
+interface TableProps {
+  titlesHead: { name: string }[]; // Agora os títulos são objetos com `name`
+  dataBody: { [key: string]: string | number | null }[];
+  basePath: string;
+}
 
-    return (
-    <table className="w-full border-collapse border border-gray-400 ...">
-        <thead>
+export default function Table({ titlesHead, dataBody, basePath }: TableProps) {
+  const router = useRouter();
+
+  const handleView = (id: string) => {
+    router.push(`/home/${basePath}/${id}`); // Redireciona para a URL dinâmica correta
+  };
+
+
+  return (
+    <div className="overflow-hidden">
+      <table className="min-w-full border border-gray-300">
+        {/* Cabeçalho */}
+        <thead className="bg-gray-200">
           <tr>
-            <th className="border border-gray-300 ...">State</th>
-            <th className="hidden md:block border border-gray-300 ...">City</th>
+            {titlesHead.map((title, index) => (
+              <th key={index} className="border border-gray-300 px-2 py-2 text-left">
+                {title.name} {/* Agora acessamos a propriedade `name` corretamente */}
+              </th>
+            ))}
           </tr>
         </thead>
+
+        {/* Corpo */}
         <tbody>
-          <tr>
-            <td className="border border-gray-300 ...">Indiana</td>
-            <td className="hidden md:block border border-gray-300 ...">Indianapolis</td>
-          </tr>
-          <tr>
-            <td className="border border-gray-300 ...">Ohio</td>
-            <td className="hidden md:block border border-gray-300 ...">Columbus</td>
-          </tr>
-          <tr>
-            <td className="border border-gray-300 ...">Michigan</td>
-            <td className="hidden md:block border border-gray-300 ...">Detroit</td>
-          </tr>
+        {dataBody.map((item) => (
+        <tr key={item.id} className="border border-gray-300 hover:bg-gray-100">
+          {Object.keys(item)
+            .filter((key) => key !== "id") // Excluindo a chave "id"
+            .map((key, index) => (
+              <td key={index} className="border border-gray-300 px-2 py-2">
+                {item[key] ?? "Não informado"}
+              </td>
+            ))} 
+              {/* Coluna de Ações */}
+              <td className="border-gray-300 px-2 py-2 flex gap-2">
+                <button
+                 onClick={() => handleView(String(item.id))} 
+                 className="cursor-pointer">
+                  <EyeIcon className="w-4 h-4 text-gray-500" />
+                </button>
+                <button className="cursor-pointer">
+                  <PencilSquareIcon className="w-4 h-4 text-gray-500" />
+                </button>
+                <button className="cursor-pointer">
+                  <TrashIcon className="w-4 h-4 text-gray-500" />
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
-    );
+    </div>
+  );
 }

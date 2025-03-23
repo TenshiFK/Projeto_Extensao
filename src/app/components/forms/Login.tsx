@@ -1,48 +1,29 @@
 'use client';
 import { EnvelopeIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import { useAuthState, useCreateUserWithEmailAndPassword, useSignInWithEmailAndPassword} from "react-firebase-hooks/auth"; //cria um usuario, talvez não queremos isso.
-import { auth } from '@/app/firebase/firebaseconfig';
+import { useAuth } from "@/app/contexts/authContext";
 import { useRouter } from "next/navigation";
- 
+
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { signIn } = useAuth();
+  const router = useRouter();
 
-  const [createUserWithEmailAndPassword] = useCreateUserWithEmailAndPassword(auth); //cria um usuario utilizando a auth do nosso firebase.
-  const [signInWithEmailAndPassword] = useSignInWithEmailAndPassword(auth); //cria funções para login.
+  const handleLogin = async () => {
 
-  const router = useRouter() //rota para mandar para outra pagina. -- talvez no futuro -- depende da auth que vamos usar?
-
-  // função registrar - para testar.
-  const handleRegistro = async () => { //função para login
-    try { //try para pegar quaisquer erros.
-      const resposta = await createUserWithEmailAndPassword(email, password);
-      console.log({resposta}); 
-      //reseta para nulo apos mandar resposta.
-      setEmail('');
-      setPassword('');
-    } catch(error){
-      console.error(error); //pega quaisquer erro e nos manda no console.
+    if (email !== '' && password !== ''){
+      try {
+        await signIn(email, password);
+        router.push('/home');
+      } catch (error) {
+        console.error("Erro ao logar",error);
+      }
+    } else {
+      alert('Preencha os campos de email e senha');
     }
   }
-
-  //login
-  const handleLogin = async () => { //função para login
-    try { //try para pegar quaisquer erros.
-      const resposta = await signInWithEmailAndPassword(email, password);
-      console.log({resposta}); 
-      //reseta para nulo apos mandar resposta.
-      setEmail('');
-      setPassword('');
-      sessionStorage.setItem('user', 'true')
-      router.push('home');
-    } catch(error){
-      console.error(error); //pega quaisquer erro e nos manda no console.
-    }
-  };
-  
 
   return (
     <form className="w-full flex flex-col">
@@ -52,10 +33,12 @@ export function LoginForm() {
       </div>
       <input
           className="w-full pl-10 py-3 input-login text-sm font-thin"
+          id="email"
           type="email"
-          placeholder="Email"
+          name="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
         />
       </div>
       <div className="relative w-full mb-14">
@@ -64,10 +47,12 @@ export function LoginForm() {
         </div>
         <input
             className="w-full pl-10 py-3 input-login text-sm font-thin"
-            value={password}
+            id="Senha"
             type={showPassword ? "password" : "text"}
-            placeholder="password"
+            name="Senha"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="Senha"
           />
           <button
           type="button"
@@ -81,7 +66,11 @@ export function LoginForm() {
           )}
         </button>
       </div>
-      <button onClick={handleLogin} className="w-full py-3 bg-main-blue text-main-white hover:bg-blue-950 rounded-[10px]">Login</button>
+      <button 
+      type="button" 
+      className="w-full py-3 bg-main-blue text-main-white hover:bg-blue-950 rounded-[10px] cursor-pointer" 
+      onClick={handleLogin}
+      >Login</button>
     </form>
   )
 }
