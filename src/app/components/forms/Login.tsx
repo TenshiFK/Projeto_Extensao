@@ -8,7 +8,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn } = useAuth();
+  const { signIn, loading } = useAuth();
   const router = useRouter();
 
   const handleLogin = async () => {
@@ -48,7 +48,7 @@ export function LoginForm() {
         <input
             className="w-full pl-10 py-3 input-login text-sm font-thin"
             id="Senha"
-            type={showPassword ? "password" : "text"}
+            type={showPassword ? "text" : "password"}
             name="Senha"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -60,17 +60,29 @@ export function LoginForm() {
           onClick={() => setShowPassword(!showPassword)}
         >
           {showPassword ? (
-            <EyeSlashIcon className="w-4 h-4 text-second-gray" />
-          ) : (
             <EyeIcon className="w-4 h-4 text-second-gray" />
+          ) : (
+            <EyeSlashIcon className="w-4 h-4 text-second-gray" />
           )}
         </button>
       </div>
       <button 
-      type="button" 
-      className="w-full py-3 bg-main-blue text-main-white hover:bg-blue-950 rounded-[10px] cursor-pointer" 
-      onClick={handleLogin}
-      >Login</button>
+        type="button" 
+        className={`w-full py-3 bg-main-blue text-main-white rounded-[10px] cursor-pointer flex justify-center items-center ${
+          loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-950'
+        }`} 
+        onClick={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+        ) : (
+          'Login'
+        )}
+      </button>
     </form>
   )
 }

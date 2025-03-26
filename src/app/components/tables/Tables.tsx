@@ -16,6 +16,10 @@ export default function Table({ titlesHead, dataBody, basePath }: TableProps) {
     router.push(`/home/${basePath}/${id}`); // Redireciona para a URL dinâmica correta
   };
 
+  const handleEdit = (id: string) => {
+    router.push(`/home/${basePath}/${id}/edit`); // Redireciona para a URL dinâmica correta
+  };
+
 
   return (
     <div className="overflow-hidden">
@@ -49,7 +53,7 @@ export default function Table({ titlesHead, dataBody, basePath }: TableProps) {
                  className="cursor-pointer">
                   <EyeIcon className="w-4 h-4 text-gray-500" />
                 </button>
-                <button className="cursor-pointer">
+                <button className="cursor-pointer" onClick={() => handleEdit(String(item.id))} >
                   <PencilSquareIcon className="w-4 h-4 text-gray-500" />
                 </button>
                 <button className="cursor-pointer">

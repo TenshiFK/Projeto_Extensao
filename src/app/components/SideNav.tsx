@@ -43,7 +43,7 @@ export default function SideNav() {
         className={`flex grow flex-col justify-between md:pl-3 md:space-x-2 md:pt-0 fixed inset-y-0 left-0 z-40 w-64 bg-main-blue ps-4 pt-16 transition-transform duration-300 ease-in-out 
           ${menuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}
       >
-        <button onClick={() => setMenuOpen(false)}><NavLinks/></button >
+        <button className='m-0' onClick={() => setMenuOpen(false)}><NavLinks/></button >
         
         <form className='flex flex-col items-center justify-center md:pr-3'>
           <button 
