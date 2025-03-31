@@ -2,6 +2,21 @@
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { getDatabase, ref, push, onValue } from 'firebase/database';
+import { useRouter } from 'next/navigation'; // Importando o useRouter
+
+type Dados ={
+  chave: string,
+  nome: string,
+  email: string,
+  telefone: string,
+  tipoCliente: string,
+  endereco: string,
+  bairro: string,
+  cep: string,
+  numero: string,
+  complemento: string
+}
 
 interface Cliente {
   id?: number;
@@ -21,7 +36,6 @@ interface Props {
 }
 
 export default function NewEditClientForm({ cliente }: Props) {
-
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
@@ -31,20 +45,43 @@ export default function NewEditClientForm({ cliente }: Props) {
   const [cep, setCep] = useState('');
   const [numero, setNumero] = useState('');
   const [complemento, setComplemento] = useState('');
+  const [Dados, setDados] = useState<Dados[]>();
 
-  useEffect(() => {
-    if (cliente) {
-      setNome(cliente.nome);
-      setEmail(cliente.email);
-      setTelefone(cliente.telefone);
-      setTipoCliente(cliente.tipoCliente);
-      setEndereco(cliente.endereco || '');
-      setBairro(cliente.bairro || '');
-      setCep(cliente.cep || '');
-      setNumero(cliente.numero || '');
-      setComplemento(cliente.complemento || '');
-    }
-  }, [cliente]);
+  const router = useRouter(); // Usando o hook useRouter para redirecionamento
+
+  const gravar = (event: React.FormEvent) => {
+    event.preventDefault();
+  
+    const database = getDatabase(); // Inicializando o banco de dados
+  
+    const dados = {
+      nome,
+      email,
+      telefone,
+      tipoCliente,
+      endereco,
+      bairro,
+      cep,
+      numero,
+      complemento,
+    };
+  
+    const refPath = ref(database, 'Dados'); // Referência ao caminho 'Dados' no Realtime Database
+    push(refPath, dados); // Adiciona os dados no Realtime Database
+
+    setNome('');
+    setEmail('');
+    setTelefone('');
+    setTipoCliente('');
+    setEndereco('');
+    setBairro('');
+    setCep('');
+    setNumero('');
+    setComplemento('');
+
+    // Redireciona para a tela de /home/clientes após salvar os dados
+    router.push('/home/clientes');
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,28 +96,61 @@ export default function NewEditClientForm({ cliente }: Props) {
       numero,
       complemento
     };
-
+  
     if (cliente) {
       console.log('Atualizando cliente:', formData);
-      // Lógica para atualizar um cliente existente
+      // Lógica para atualizar um cliente existente (não implementada aqui)
     } else {
       console.log('Criando novo cliente:', formData);
-      // Lógica para criar um novo cliente
+      gravar(e); // Chama a função para gravar os dados no banco
     }
   };
 
+  useEffect(() => {
+    if (cliente) {
+      // Preenche os campos do formulário com os dados do cliente, se fornecido
+      setNome(cliente.nome);
+      setEmail(cliente.email);
+      setTelefone(cliente.telefone);
+      setTipoCliente(cliente.tipoCliente);
+      setEndereco(cliente.endereco || '');
+      setBairro(cliente.bairro || '');
+      setCep(cliente.cep || '');
+      setNumero(cliente.numero || '');
+      setComplemento(cliente.complemento || '');
+    }
+
+    const refDados = ref(getDatabase(), "Dados");
+
+    onValue(refDados, (snapshot) => {
+      if (snapshot.exists()) {
+        const resultadoDados = Object.entries(snapshot.val()).map(([chave, valor]: [string, any]) => ({
+          chave,
+          nome: valor.nome,
+          email: valor.email,
+          telefone: valor.telefone,
+          tipoCliente: valor.tipoCliente,
+          endereco: valor.endereco,
+          bairro: valor.bairro,
+          cep: valor.cep,
+          numero: valor.numero,
+          complemento: valor.complemento,
+        }));
+        console.log(resultadoDados);
+      } else {
+        console.log("Nenhum dado encontrado.");
+      }
+    });
+  }, [cliente]); // Adicionando o 'cliente' como dependência
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="space-y-8">
         <div className="pb-14">
-
-
           <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-6">
             <div className="sm:col-span-full">
               <h2 className="text-base/7 font-semibold text-gray-900">Informações Pessoais:</h2>
             </div>  
-            
             <div className="sm:col-span-3">
               <label htmlFor="nome" className="block text-sm/6 font-medium text-gray-900">
                 Nome do cliente
@@ -96,7 +166,6 @@ export default function NewEditClientForm({ cliente }: Props) {
                 />
               </div>
             </div>
-
             <div className="sm:col-span-3">
               <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900">
                   E-mail
@@ -112,7 +181,6 @@ export default function NewEditClientForm({ cliente }: Props) {
                   />
               </div>
             </div>
-            
 
             <div className="sm:col-span-2">
               <label htmlFor="telefone" className="block text-sm/6 font-medium text-gray-900">
@@ -239,7 +307,6 @@ export default function NewEditClientForm({ cliente }: Props) {
             </div>
           </div>
         </div>
-
       </div>
 
       <div className="mt-6 flex items-center justify-end gap-x-6">

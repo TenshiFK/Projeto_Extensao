@@ -2,14 +2,14 @@
 import { EyeIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 
-
 interface TableProps {
   titlesHead: { name: string }[]; // Agora os títulos são objetos com `name`
-  dataBody: { [key: string]: string | number | null }[];
+  dataBody: { [key: string]: string | number | null }[]; 
   basePath: string;
+  onDelete: (id: string) => void; // Função de exclusão
 }
 
-export default function Table({ titlesHead, dataBody, basePath }: TableProps) {
+export default function Table({ titlesHead, dataBody, basePath, onDelete }: TableProps) {
   const router = useRouter();
 
   const handleView = (id: string) => {
@@ -20,6 +20,11 @@ export default function Table({ titlesHead, dataBody, basePath }: TableProps) {
     router.push(`/home/${basePath}/${id}/edit`); // Redireciona para a URL dinâmica correta
   };
 
+  const handleDelete = (id: string) => {
+    if (window.confirm("Tem certeza que deseja excluir este cliente?")) {
+      onDelete(id); // Chama a função de exclusão passada como prop
+    }
+  };
 
   return (
     <div className="overflow-hidden">
@@ -48,15 +53,13 @@ export default function Table({ titlesHead, dataBody, basePath }: TableProps) {
             ))} 
               {/* Coluna de Ações */}
               <td className="border-gray-300 px-2 py-2 flex gap-2">
-                <button
-                 onClick={() => handleView(String(item.id))} 
-                 className="cursor-pointer">
+                <button onClick={() => handleView(String(item.id))} className="cursor-pointer">
                   <EyeIcon className="w-4 h-4 text-gray-500" />
                 </button>
-                <button className="cursor-pointer" onClick={() => handleEdit(String(item.id))} >
+                <button className="cursor-pointer" onClick={() => handleEdit(String(item.id))}>
                   <PencilSquareIcon className="w-4 h-4 text-gray-500" />
                 </button>
-                <button className="cursor-pointer">
+                <button className="cursor-pointer" onClick={() => handleDelete(String(item.id))}>
                   <TrashIcon className="w-4 h-4 text-gray-500" />
                 </button>
               </td>
