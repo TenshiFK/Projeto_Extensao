@@ -1,125 +1,128 @@
 'use client';
-import { ChevronDownIcon } from '@heroicons/react/16/solid'
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { getDatabase, ref, push, onValue, update } from 'firebase/database';
-import { useRouter, useParams } from 'next/navigation'; // Importando o useRouter
+import { getDatabase, ref, push, onValue, update,} from 'firebase/database';
+import { useParams, useRouter } from 'next/navigation'; // Importando o useRouter
 
-
-interface Cliente {
+interface Fornecedor {
   id?: number;
-  nome: string;
-  email: string;
-  telefone: string;
-  tipoCliente: string;
-  endereco?: string;
-  bairro?: string;
-  cep?: string;
-  numero?: string;
-  complemento?: string;
+  nomeFornecedor: string,
+  email?: string,
+  telefone: string,
+  endereco?: string,
+  bairro?: string,
+  cidade?: string,
+  cep?: string,
+  numero?: string,
+  complemento?: string,
+  informacoesAdicionais?: string,
 }
 
 interface Props {
-  cliente?: Cliente; // O cliente pode ser opcional (para criação de novos clientes)
+  fornecedor?: Fornecedor; // O cliente pode ser opcional (para criação de novos clientes)
 }
 
-export default function NewEditClientForm({ cliente }: Props) {
-  const [nome, setNome] = useState('');
+export default function NewEditFornecedoresForm({ fornecedor }: Props) {
+  const [nomeFornecedor, setNomeFornecedor] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
-  const [tipoCliente, setTipoCliente] = useState('');
+  const [cidade, setCidade] = useState('');
   const [endereco, setEndereco] = useState('');
   const [bairro, setBairro] = useState('');
   const [cep, setCep] = useState('');
   const [numero, setNumero] = useState('');
   const [complemento, setComplemento] = useState('');
+  const [informacoesAdicionais, setInformacoesAdicionais] = useState('');
 
-  const { id } = useParams();
+  const {id} = useParams(); // Obtendo o id do fornecedor da URL
   const router = useRouter(); // Usando o hook useRouter para redirecionamento
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const database = getDatabase();
-
+    const database = getDatabase(); // Inicializando o banco de dados
+  
     const dados = {
-      nome,
+      nomeFornecedor,
       email,
       telefone,
-      tipoCliente,
+      cidade,
       endereco,
       bairro,
       cep,
       numero,
       complemento,
+      informacoesAdicionais
     };
 
     try {
-      if (cliente && id) {
-        // Atualizar cliente existente
-        const refPath = ref(database, `Dados/${id}`);
-        await update(refPath, dados);
-        alert("Cliente atualizado com sucesso");
+      if (fornecedor && id) {
+        const refPath = ref(database, `DadosFornecedores/${id}`); // Referência ao caminho 'Dados' no Realtime Database
+        await update(refPath, dados); // Adiciona os dados no Realtime Database
+        alert("Fornecedor atualizado com sucesso");
       } else {
-        // Criar novo cliente
-        const refPath = ref(database, 'Dados');
-        await push(refPath, dados);
-        alert("Cliente criado com sucesso");
+        const refPath = ref(database, 'DadosFornecedores'); // Referência ao caminho 'Dados' no Realtime Database
+        await push(refPath, dados); // Adiciona os dados no Realtime Database
+        alert("Fornecedor cadastrado com sucesso");
       }
 
-      // Limpar formulário
-      setNome('');
+      setNomeFornecedor('');
       setEmail('');
       setTelefone('');
-      setTipoCliente('');
+      setCidade('');
       setEndereco('');
       setBairro('');
       setCep('');
       setNumero('');
       setComplemento('');
+      setInformacoesAdicionais('');
 
-      router.push('/home/clientes');
+      // Redireciona para a tela de /home/... após salvar os dados
+      router.push('/home/fornecedores');
 
     } catch (error) {
-      console.error("Erro ao salvar dados:", error);
+      console.error("Erro ao gravar os dados:", error);
     }
   };
 
   useEffect(() => {
-    if (cliente) {
-      // Preenche os campos do formulário com os dados do cliente, se fornecido
-      setNome(cliente.nome);
-      setEmail(cliente.email);
-      setTelefone(cliente.telefone);
-      setTipoCliente(cliente.tipoCliente);
-      setEndereco(cliente.endereco || '');
-      setBairro(cliente.bairro || '');
-      setCep(cliente.cep || '');
-      setNumero(cliente.numero || '');
-      setComplemento(cliente.complemento || '');
+    if (fornecedor) {
+      // Preenche os campos do formulário com os dados, se fornecido
+      setNomeFornecedor(fornecedor.nomeFornecedor);
+      setEmail(fornecedor.email || '');
+      setTelefone(fornecedor.telefone);
+      setEndereco(fornecedor.endereco || '');
+      setBairro(fornecedor.bairro || '');
+      setCidade(fornecedor.cidade || '');
+      setCep(fornecedor.cep || '');
+      setNumero(fornecedor.numero || '');
+      setComplemento(fornecedor.complemento || '');
+      setInformacoesAdicionais(fornecedor.informacoesAdicionais || '');
     }
 
-    const refDados = ref(getDatabase(), "Dados");
+    const refDados = ref(getDatabase(), "DadosFornecedores"); // Referência ao caminho 'Dados' no Realtime Database
 
     onValue(refDados, (snapshot) => {
       if (snapshot.exists()) {
-        const resultadoDados = Object.entries(snapshot.val()).map(([chave, valor]: [string, any]) => ({
-          chave,
-          nome: valor.nome,
+        const resultadoDados = Object.entries(snapshot.val()).map(([key, valor]: [string, any]) => ({
+          key,
+          nomeFornecedor: valor.nomeFornecedor,
           email: valor.email,
           telefone: valor.telefone,
-          tipoCliente: valor.tipoCliente,
           endereco: valor.endereco,
           bairro: valor.bairro,
+          cidade: valor.cidade,
           cep: valor.cep,
           numero: valor.numero,
           complemento: valor.complemento,
+          informacoesAdicionais: valor.informacoesAdicionais,
+          
         }));
         console.log(resultadoDados);
       } else {
         console.log("Nenhum dado encontrado.");
       }
     });
-  }, [cliente]); // Adicionando o 'cliente' como dependência
+  }, [fornecedor]); // Adicionando o 'peoduto' como dependência
 
   return (
     <form onSubmit={handleSubmit}>
@@ -131,7 +134,7 @@ export default function NewEditClientForm({ cliente }: Props) {
             </div>  
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="nome" className="block text-sm/6 font-medium text-gray-900">
-                Nome do cliente
+                Nome do fornecedor
               </label>
               <div className="mt-2">
                 <input
@@ -139,8 +142,8 @@ export default function NewEditClientForm({ cliente }: Props) {
                   name="nome"
                   type="text"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setNome(e.target.value)}
-                  value={nome}
+                  onChange={(e) => setNomeFornecedor(e.target.value)}
+                  value={nomeFornecedor}
                 />
               </div>
             </div>
@@ -176,34 +179,11 @@ export default function NewEditClientForm({ cliente }: Props) {
               </div>
             </div>
 
-            <div className="sm:col-span-2 col-span-6">
-              <label htmlFor="tipoCliente" className="block text-sm/6 font-medium text-gray-900">
-                Tipo de Cliente
-              </label>
-              <div className="mt-2 grid grid-cols-1">
-                <select
-                  id="tipoCliente"
-                  name="tipoCliente"
-                  className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setTipoCliente(e.target.value)}
-                  value={tipoCliente}
-                >
-                  <option>Selecione</option>
-                  <option>Refrigeração</option>
-                  <option>Tercerizado</option>
-                </select>
-                <ChevronDownIcon
-                  aria-hidden="true"
-                  className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
-                />
-              </div>
-            </div>
-
             <div className='sm:col-span-full mt-3 w-60'>
               <h2 className="text-base/7 font-semibold text-gray-900">Endereço</h2>
             </div>
 
-            <div className="col-span-3 col-span-6">
+            <div className="sm:col-span-2 col-span-6">
               <label htmlFor="endereco" className="block text-sm/6 font-medium text-gray-900">
                 Endereço
               </label>
@@ -219,7 +199,7 @@ export default function NewEditClientForm({ cliente }: Props) {
               </div>
             </div>
 
-            <div className="col-span-3 col-span-6">
+            <div className="sm:col-span-2 col-span-6">
               <label htmlFor="bairro" className="block text-sm/6 font-medium text-gray-900">
                 Bairro
               </label>
@@ -231,6 +211,22 @@ export default function NewEditClientForm({ cliente }: Props) {
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   onChange={(e) => setBairro(e.target.value)}
                   value={bairro}
+                />
+              </div>
+            </div>
+
+            <div className="sm:col-span-2 col-span-6">
+              <label htmlFor="cidade" className="block text-sm/6 font-medium text-gray-900">
+                Cidade
+              </label>
+              <div className="mt-2">
+                <input
+                  id="cidade"
+                  name="cidade"
+                  type="text"
+                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  onChange={(e) => setCidade(e.target.value)}
+                  value={cidade}
                 />
               </div>
             </div>
@@ -283,12 +279,29 @@ export default function NewEditClientForm({ cliente }: Props) {
                 />
               </div>
             </div>
+
+            <div className="sm:col-span-6">
+              <label htmlFor="descricao" className="block text-sm/6 font-medium text-gray-900">
+                Descrição
+              </label>
+              <div className="mt-2">
+              <textarea
+                id="descricao"
+                name="descricao"
+                rows={4}
+                className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm"
+                onChange={(e) => setInformacoesAdicionais(e.target.value)}
+                value={informacoesAdicionais}
+                placeholder="Digite a informação do fornecedor aqui..."
+              />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="mt-6 flex items-center justify-end gap-x-6">
-        <Link href="/home/clientes">
+        <Link href="/home/fornecedores">
           <button type="button" className="text-sm/6 font-semibold text-main-white px-3 py-2 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
             Cancelar
           </button>

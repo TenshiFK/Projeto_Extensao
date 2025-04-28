@@ -4,23 +4,27 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { ref, get } from "firebase/database";
 import { database } from "../../../../services/firebase/firebaseconfig";
-import NewEditClientForm from "@/app/components/forms/NewEditClient";
+import NewEditOrcamentoForm from "@/app/components/forms/NewEditOrcamento";
 
-interface Cliente {
-  nome: string;
-  telefone: string;
-  email: string;
-  tipoCliente: string;
-  endereco: string;
-  bairro: string;
-  cep: string;
-  numero: string;
-  complemento?: string;
-}
+interface Orcamento {
+    titulo: string,
+    cliente: string,
+    dataCriacao: string,
+    garantia: string,
+    descricao: string,
+    solucao: string,
+    produtos?: {
+      produto: string;
+      quantidade: string;
+    }[],
+    outros?: string,
+    valorFrete?: string,
+    valorTotal: string,
+  }
 
 export default function Page() {
   const { id } = useParams();
-  const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [orcamento, setOrcamento] = useState<Orcamento | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,9 +34,9 @@ export default function Page() {
       try {
         const snapshot = await get(ref(database, `Dados/${id}`));
         if (snapshot.exists()) {
-          setCliente(snapshot.val());
+            setOrcamento(snapshot.val());
         } else {
-          console.log("Cliente não encontrado");
+          console.log("Orçamento não encontrado");
         }
       } catch (error) {
         console.error("Erro ao buscar os dados:", error);
@@ -48,16 +52,16 @@ export default function Page() {
     return <div>Carregando...</div>;
   }
 
-  if (!cliente) {
-    return <div>Cliente não encontrado.</div>;
+  if (!orcamento) {
+    return <div>Orçamento não encontrado.</div>;
   }
 
   return (
     <main>
       <h1 className={`mb-4 text-xl md:text-2xl`}>
-        Editar Cliente
+        Editar Orçamento
       </h1>
-      <NewEditClientForm cliente={cliente} />
+      <NewEditOrcamentoForm orcamento={orcamento} />
     </main>
   );
 }

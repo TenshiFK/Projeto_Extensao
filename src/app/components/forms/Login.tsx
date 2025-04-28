@@ -8,10 +8,12 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn, loading } = useAuth();
+  const { signIn } = useAuth();
+  const [loadingLogin, setLoadingLogin] = useState(false);
   const router = useRouter();
 
   const handleLogin = async () => {
+    setLoadingLogin(true);
 
     if (email !== '' && password !== ''){
       try {
@@ -19,6 +21,8 @@ export function LoginForm() {
         router.push('/home');
       } catch (error) {
         console.error("Erro ao logar",error);
+      } finally {
+        setLoadingLogin(false);
       }
     } else {
       alert('Preencha os campos de email e senha');
@@ -69,12 +73,12 @@ export function LoginForm() {
       <button 
         type="button" 
         className={`w-full py-3 bg-main-blue text-main-white rounded-[10px] cursor-pointer flex justify-center items-center ${
-          loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-950'
+          loadingLogin ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-950'
         }`} 
         onClick={handleLogin}
-        disabled={loading}
+        disabled={loadingLogin}
       >
-        {loading ? (
+        {loadingLogin ? (
           <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>

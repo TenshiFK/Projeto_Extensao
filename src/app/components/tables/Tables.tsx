@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 interface TableProps {
   titlesHead: { name: string }[]; // Agora os títulos são objetos com `name`
-  dataBody: { [key: string]: string | number | null }[]; 
+  dataBody: { id: string | number | null; [key: string]: string | number | null }[]; 
   basePath: string;
   onDelete: (id: string) => void; // Função de exclusão
 }
@@ -16,51 +16,64 @@ export default function Table({ titlesHead, dataBody, basePath, onDelete }: Tabl
     router.push(`/home/${basePath}/${id}`); // Redireciona para a URL dinâmica correta
   };
 
-  const handleEdit = (id: string) => {
-    router.push(`/home/${basePath}/${id}/edit`); // Redireciona para a URL dinâmica correta
+  const handleEdit = (id: string | number | null) => {
+    if (!id) return; // Evita erros caso id seja null
+    router.push(`/home/${basePath}/${String(id)}/edit`); // Converte id para string
   };
+  
 
   const handleDelete = (id: string) => {
-    if (window.confirm("Tem certeza que deseja excluir este cliente?")) {
-      onDelete(id); // Chama a função de exclusão passada como prop
-    }
+    onDelete(id); // Só chama a função que o componente pai vai lidar
   };
 
   return (
     <div className="overflow-hidden">
-      <table className="min-w-full border border-gray-300">
+      <table className="min-w-full">
         {/* Cabeçalho */}
-        <thead className="bg-gray-200">
+        <thead className="bg-second-white">
           <tr>
-            {titlesHead.map((title, index) => (
-              <th key={index} className="border border-gray-300 px-2 py-2 text-left">
-                {title.name} {/* Agora acessamos a propriedade `name` corretamente */}
-              </th>
-            ))}
+            {titlesHead.map((title, index) => {
+              const isFirst = index === 0;
+              const isLast = index === titlesHead.length - 1;
+              return (
+                <th
+                  key={index}
+                  className={`border border-main-blue px-2 py-2 text-center text-main-blue
+                    ${isFirst || isLast ? "" : "hidden lg:table-cell"}
+                  `}
+                >
+                  {title.name}
+                </th>
+              );
+            })}
           </tr>
         </thead>
 
         {/* Corpo */}
         <tbody>
-        {dataBody.map((item) => (
-        <tr key={item.id} className="border border-gray-300 hover:bg-gray-100">
-          {Object.keys(item)
-            .filter((key) => key !== "id") // Excluindo a chave "id"
-            .map((key, index) => (
-              <td key={index} className="border border-gray-300 px-2 py-2">
-                {item[key] ?? "Não informado"}
-              </td>
-            ))} 
-              {/* Coluna de Ações */}
-              <td className="border-gray-300 px-2 py-2 flex gap-2">
+          {dataBody.map((item) => (
+            <tr key={String(item.id)} className="border border-gray-950 bg-third-white">
+              {Object.keys(item)
+                .filter((key) => key !== "id")
+                .map((key, index) => (
+                  <td
+                    key={index}
+                    className={`border border-gray-950 px-2 py-2 bg-third-white text-center
+                      ${index === 0 ? "" : "hidden lg:table-cell"}
+                    `}
+                  >
+                    {item[key] ?? "Não informado"}
+                  </td>
+                ))}
+              <td className="border-gray-300 px-2 py-2 flex gap-3 justify-center">
                 <button onClick={() => handleView(String(item.id))} className="cursor-pointer">
-                  <EyeIcon className="w-4 h-4 text-gray-500" />
+                  <EyeIcon className="w-5 h-5 text-main-blue" />
                 </button>
-                <button className="cursor-pointer" onClick={() => handleEdit(String(item.id))}>
-                  <PencilSquareIcon className="w-4 h-4 text-gray-500" />
+                <button onClick={() => handleEdit(item.id)} className="cursor-pointer">
+                  <PencilSquareIcon className="w-5 h-5 text-main-blue" />
                 </button>
                 <button className="cursor-pointer" onClick={() => handleDelete(String(item.id))}>
-                  <TrashIcon className="w-4 h-4 text-gray-500" />
+                  <TrashIcon className="w-5 h-5 text-main-blue" />
                 </button>
               </td>
             </tr>

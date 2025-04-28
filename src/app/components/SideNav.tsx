@@ -25,9 +25,9 @@ export default function SideNav() {
   };
 
   return (
-    <div className="flex h-full w-full flex-col py-4 bg-main-blue">
+    <div className="flex h-full w-full flex-col items-center justify-center py-4 bg-main-blue">
       <Link
-        className="mb-2 flex h-20 items-center justify-center rounded-md p-4 md:h-40"
+        className="w-24 md:w-full mb-2 flex h-20 items-center justify-center p-4 md:h-40"
         href="/home"
       >
         <Image src={Logo} alt="Logo" className='md:w-20 w-15'/>

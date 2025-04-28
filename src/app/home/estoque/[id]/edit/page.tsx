@@ -4,23 +4,24 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { ref, get } from "firebase/database";
 import { database } from "../../../../services/firebase/firebaseconfig";
-import NewEditClientForm from "@/app/components/forms/NewEditClient";
+import NewEditProdutoForm from "@/app/components/forms/NewEditEstoque";
 
-interface Cliente {
-  nome: string;
-  telefone: string;
-  email: string;
-  tipoCliente: string;
-  endereco: string;
-  bairro: string;
-  cep: string;
-  numero: string;
-  complemento?: string;
-}
+interface Produto {
+    nomeProduto: string,
+    valor: string,
+    dataCompra: string,
+    localCompra?: string,
+    quantidade: string,
+    fornecedor?: {
+      id: string;
+      nomeFornecedor: string;
+    },
+    descricao?: string,
+  }
 
 export default function Page() {
   const { id } = useParams();
-  const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [produto, setProduto] = useState<Produto | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,9 +31,9 @@ export default function Page() {
       try {
         const snapshot = await get(ref(database, `Dados/${id}`));
         if (snapshot.exists()) {
-          setCliente(snapshot.val());
+          setProduto(snapshot.val());
         } else {
-          console.log("Cliente não encontrado");
+          console.log("Produto não encontrado");
         }
       } catch (error) {
         console.error("Erro ao buscar os dados:", error);
@@ -48,16 +49,16 @@ export default function Page() {
     return <div>Carregando...</div>;
   }
 
-  if (!cliente) {
-    return <div>Cliente não encontrado.</div>;
+  if (!produto) {
+    return <div>Produto não encontrado.</div>;
   }
 
   return (
     <main>
       <h1 className={`mb-4 text-xl md:text-2xl`}>
-        Editar Cliente
+        Editar Produto
       </h1>
-      <NewEditClientForm cliente={cliente} />
+      <NewEditProdutoForm produto={produto} />
     </main>
   );
 }

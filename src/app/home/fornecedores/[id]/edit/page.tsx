@@ -4,23 +4,24 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { ref, get } from "firebase/database";
 import { database } from "../../../../services/firebase/firebaseconfig";
-import NewEditClientForm from "@/app/components/forms/NewEditClient";
+import NewEditFornecedoresForm from "@/app/components/forms/NewEditFornecedores";
 
-interface Cliente {
-  nome: string;
-  telefone: string;
-  email: string;
-  tipoCliente: string;
-  endereco: string;
-  bairro: string;
-  cep: string;
-  numero: string;
-  complemento?: string;
-}
+interface Fornecedor {
+    nomeFornecedor: string,
+    email?: string,
+    telefone: string,
+    endereco?: string,
+    bairro?: string,
+    cidade?: string,
+    cep?: string,
+    numero?: string,
+    complemento?: string,
+    informacoesAdicionais?: string,
+  }
 
 export default function Page() {
   const { id } = useParams();
-  const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [fornecedor, setFornecedor] = useState<Fornecedor | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,9 +31,9 @@ export default function Page() {
       try {
         const snapshot = await get(ref(database, `Dados/${id}`));
         if (snapshot.exists()) {
-          setCliente(snapshot.val());
+          setFornecedor(snapshot.val());
         } else {
-          console.log("Cliente não encontrado");
+          console.log("Fornecedor não encontrado");
         }
       } catch (error) {
         console.error("Erro ao buscar os dados:", error);
@@ -48,16 +49,16 @@ export default function Page() {
     return <div>Carregando...</div>;
   }
 
-  if (!cliente) {
-    return <div>Cliente não encontrado.</div>;
+  if (!fornecedor) {
+    return <div>Produto não encontrado.</div>;
   }
 
   return (
     <main>
       <h1 className={`mb-4 text-xl md:text-2xl`}>
-        Editar Cliente
+        Editar Produto
       </h1>
-      <NewEditClientForm cliente={cliente} />
+      <NewEditFornecedoresForm fornecedor={fornecedor} />
     </main>
   );
 }
