@@ -31,7 +31,7 @@ interface Orcamento {
   
       const fetchData = async () => {
         try {
-          const snapshot = await get(ref(database, `Dados/${id}`));
+          const snapshot = await get(ref(database, `DadosOrcamentos/${id}`));
           if (snapshot.exists()) {
             setOrcamento(snapshot.val());
           } else {

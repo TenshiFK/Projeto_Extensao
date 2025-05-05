@@ -59,14 +59,14 @@ export default function Page() {
   
 
     useEffect(() => {
-        const orcamentosRef = ref(database, "Dados");
+        const orcamentosRef = ref(database, "DadosOrcamentos");
     
         const unsubscribe = onValue(orcamentosRef, (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.val();
             const orcamentosData: Orcamentos[] = Object.entries(data).map(([key, value]: [string, any]) => ({
               id: key,
-              nome: value.nome || "Sem nome",
+              nome: value.cliente || "Sem nome",
               garantia: value.garantia || "Sem garantia",
               dataCriacao: value.dataCriacao || new Date().toLocaleDateString(),
               valor: value.valorTotal,

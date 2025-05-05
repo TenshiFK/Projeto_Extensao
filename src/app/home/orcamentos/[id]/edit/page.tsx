@@ -47,7 +47,7 @@ export default function Page() {
 
     const fetchData = async () => {
       try {
-        const snapshot = await get(ref(database, `Dados/${id}`)); // Changed to DadosTrabalhos
+        const snapshot = await get(ref(database, `DadosOrcamentos/${id}`)); // Changed to DadosTrabalhos
         if (snapshot.exists()) {
           const data = snapshot.val();
           setOrcamento({

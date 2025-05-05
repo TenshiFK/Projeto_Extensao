@@ -3,8 +3,7 @@ import { ChevronDownIcon } from '@heroicons/react/16/solid'
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getDatabase, ref, push, onValue, update,} from 'firebase/database';
-import { useParams, useRouter } from 'next/navigation'; // Importando o useRouter
-
+import { useParams, useRouter } from 'next/navigation';
 
 interface Orcamento {
   id?: number;
@@ -41,13 +40,14 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
   const [valorTotal, setValorTotal] = useState('');
 
   const [listaProdutos, setListaProdutos] = useState<{ produto: string; quantidade: string }[]>([]);
+  const [clientesDisponiveis, setClientesDisponiveis] = useState<{id: string, nome: string}[]>([]);
 
-  const {id} = useParams(); // Obtendo o ID do orçamento da URL
-  const router = useRouter(); // Usando o hook useRouter para redirecionamento
+  const {id} = useParams();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const database = getDatabase(); // Inicializando o banco de dados
+    const database = getDatabase();
   
     const dados = {
       titulo,
@@ -56,7 +56,7 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
       solucao,
       dataCriacao,
       garantia,
-      produtos: listaProdutos, // Usando a lista de produtos
+      produtos: listaProdutos,
       outros,
       valorFrete,
       valorTotal,
@@ -64,16 +64,16 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
 
     try {
       if (orcamento && id) {
-        const refPath = ref(database, `Dados/${id}`); 
+        const refPath = ref(database, `DadosOrcamentos/${id}`); 
         await update(refPath, dados); 
         alert('Orçamento atualizado com sucesso!');
       } else {
-        const refPath = ref(database, 'Dados'); 
+        const refPath = ref(database, 'DadosOrcamentos'); 
         await push(refPath, dados); 
         alert('Orçamento criado com sucesso!');
       }
       
-      setTitulo(''); // Limpa os campos após salvar
+      setTitulo('');
       setCliente('');
       setDescricao('');
       setSolucao('');
@@ -84,14 +84,35 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
       setOutros('');
       setValorFrete('');
       setValorTotal('');
-      setListaProdutos([]); // Limpa a lista de produtos após salvar
-
+      setListaProdutos([]);
+      
       // Redireciona para a tela de /home/... após salvar os dados
       router.push('/home/orcamentos');
     } catch (error) {
       console.error('Erro ao salvar os dados:', error);
     }
   };
+
+  useEffect(() => {
+    const database = getDatabase();
+    const refClientes = ref(database, "Dados");
+    
+    const unsubscribe = onValue(refClientes, (snapshot) => {
+      if (snapshot.exists()) {
+        const clientesArray = Object.entries(snapshot.val()).map(
+          ([id, clienteData]: [string, any]) => ({
+            id,
+            nome: clienteData.nome || clienteData.nomeFornecedor || 'Sem nome'
+          })
+        );
+        setClientesDisponiveis(clientesArray);
+      } else {
+        setClientesDisponiveis([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (orcamento) {
@@ -107,7 +128,7 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
       setValorTotal(orcamento.valorTotal);
     }
 
-    const refDados = ref(getDatabase(), "Dados");
+    const refDados = ref(getDatabase(), "DadosOrcamentos");
 
     onValue(refDados, (snapshot) => {
       if (snapshot.exists()) {
@@ -129,7 +150,9 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
         console.log("Nenhum dado encontrado.");
       }
     });
-  }, [orcamento]); // Adicionando o 'orçamento' como dependência
+  }, [orcamento]);
+
+
 
   return (
     <form onSubmit={handleSubmit}>
@@ -166,9 +189,12 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
                   onChange={(e) => setCliente(e.target.value)}
                   value={cliente}
                 >
-                  <option>Selecione</option>
-                  <option>Cliente 1</option>
-                  <option>Cliente 2</option>
+                  <option value="">Selecione</option>
+                  {clientesDisponiveis.map((cliente) => (
+                    <option key={cliente.id} value={cliente.nome}>
+                      {cliente.nome}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDownIcon
                   aria-hidden="true"
