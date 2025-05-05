@@ -1,10 +1,16 @@
-export default async function Page() {
+import Image from 'next/image';
+import Img1 from '../../assets/imgs/img.png';
+
+
+
+export default function Page() {
 
     return (
       <main>
-        <h1 className={`mb-4 text-xl md:text-2xl`}>
-          Home
-        </h1>
+        <div className='flex items-center justify-center w-full md:mt-20 md:h-full h-screen'>
+          <Image src={Img1} alt='Img-Home' className='w-80 sm:w-100'/> 
+        </div>
+        
       </main>
     );
 }

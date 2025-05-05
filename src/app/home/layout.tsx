@@ -1,29 +1,16 @@
-'use client';
 import SideNav from "../components/SideNav";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/app/firebase/firebaseconfig";
-import { useRouter } from "next/navigation";
-
+import PrivateRoute from "../components/private/PrivateRoute";
 
  
 export default function Layout({ children }: { children: React.ReactNode }) {
-
-  const [user] = useAuthState(auth); //para autenticações, serve para prevenir usuarios não logados de ver a homepage.
-  const router = useRouter();
-  const userSession = sessionStorage.getItem('user');
-  
-  console.log({user})
-
-  if (!user && !userSession){
-    router.push('/')
-  }
-
   return (
+    <PrivateRoute>
     <div className="flex h-screen flex-col md:flex-row md:overflow-hidden">
       <div className="w-full flex-none md:w-64">
         <SideNav/>
       </div>
-      <div className="flex-grow p-6 md:overflow-y-auto md:py-20 md:px-15">{children}</div>
+      <div className="flex-grow p-6 md:overflow-y-auto md:py-20 md:px-15 bg-body-white">{children}</div>
     </div>
+    </PrivateRoute>
   );
 }
