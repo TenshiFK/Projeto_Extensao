@@ -172,10 +172,20 @@ export default function Page() {
       </div>
 
       <div className="mt-16">
-        <Tables titlesHead={titlesHead} dataBody={paginatedTrabalhos} basePath="/trabalhos" onDelete={openModal} />
-        <div className="mt-6">
-          <Pagination totalPages={totalPages} currentPage={currentPage} />
-        </div>
+        {
+          filteredTrabalhos.length === 0 ? (
+            <div className="h-screen md:h-100 text-center text-gray-500 text-lg py-10 justify-center items-center flex">
+              Nada por aqui ainda!
+            </div>
+          ) : (
+            <>
+              <Tables titlesHead={titlesHead} dataBody={paginatedTrabalhos} basePath="/trabalhos" onDelete={openModal} />
+              <div className="mt-6">
+                <Pagination totalPages={totalPages} currentPage={currentPage} />
+              </div>
+            </>
+          )
+        }
       </div>
       <Modal isOpen={modalOpen} onClose={closeModal} onConfirm={confirmDelete} />
       <ModalPDF isOpen={modalPDFOpen} onClose={closeModalPDF} onConfirm={exportarPDF} />
