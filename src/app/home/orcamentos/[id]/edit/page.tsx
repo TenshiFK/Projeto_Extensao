@@ -5,10 +5,15 @@ import { useParams } from "next/navigation";
 import { ref, get } from "firebase/database";
 import { database } from "../../../../services/firebase/firebaseconfig";
 import NewEditOrcamentoForm from "@/app/components/forms/NewEditOrcamento";
+import Link from "next/link";
+import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
 interface Orcamento {
   titulo: string;
-  cliente: string;
+  cliente: {
+    id: string;
+    nome: string;
+  },
   dataCriacao: string;
   garantia: string;
   descricao: string;
@@ -24,7 +29,10 @@ interface Orcamento {
 
 const DEFAULT_ORCAMENTO: Orcamento = {
   titulo: '',
-  cliente: '',
+  cliente: {
+    id: '',
+    nome: ''
+  },
   dataCriacao: new Date().toISOString().split('T')[0], // Default to today's date
   garantia: '',
   descricao: '',
@@ -79,7 +87,12 @@ export default function Page() {
 
   return (
     <main className="p-4">
-      <h1 className="mb-4 text-xl md:text-2xl font-bold">
+      <div className="mb-4">
+        <Link href="/home/orcamentos">
+          <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer"/>
+        </Link>
+      </div>
+      <h1 className="mb-4 text-xl md:text-2xl font-semibold">
         Editar Orçamento
       </h1>
       <NewEditOrcamentoForm 

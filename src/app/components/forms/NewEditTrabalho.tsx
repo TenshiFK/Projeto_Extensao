@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getDatabase, ref, push, onValue, update,} from 'firebase/database';
 import { useParams, useRouter } from 'next/navigation'; // Importando o useRouter
+import { toast } from 'react-toastify';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 interface Trabalho {
   id?: number;
@@ -53,7 +55,9 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
 
   const [listaProdutos, setListaProdutos] = useState<{ produto: string; quantidade: string }[]>([]);
   const [clientesDisponiveis, setClientesDisponiveis] = useState<{ id: string; nome: string }[]>([]);
-  
+  const [produtosDisponiveis, setProdutosDisponiveis] = useState<{id: string, nomeProduto: string}[]>([]);
+  const [orcamentosDisponiveis, setOrcamentosDisponiveis] = useState<{id: string, titulo: string}[]>([]);
+
   const {id} = useParams(); // Obtendo o ID da URL (se necessário)
   const router = useRouter(); // Usando o hook useRouter para redirecionamento
 
@@ -81,11 +85,11 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
       if (trabalho && id){
         const refPath = ref(database, `DadosTrabalhos/${id}`);
         await update(refPath, dados); // Atualiza os dados no Realtime Database
-        alert('Trabalho atualizado com sucesso!');
+        toast.success('Trabalho atualizado com sucesso!');
       } else {
         const refPath = ref(database, 'DadosTrabalhos'); // Referência ao caminho 'DadosTrabalhos' no Realtime Database
         await push(refPath, dados); // Adiciona os dados no Realtime Database
-        alert('Trabalho criado com sucesso!');
+        toast.success('Trabalho cadastrado com sucesso!');
       }
 
       setCliente({ id: '', nome: ''}); // Limpa o campo de cliente após salvar
@@ -109,6 +113,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
 
     } catch (error) {
       console.error('Erro ao salvar os dados:', error);
+      toast.error('Erro ao salvar os dados.'); // Exibe mensagem de erro
     }
   };
 
@@ -131,6 +136,48 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
     });
   
     return () => unsubscribe(); // Limpeza do listener quando o componente desmontar
+  }, []);
+
+  useEffect(() => {
+    const database = getDatabase();
+    const refProdutos = ref(database, "DadosProdutos");
+    
+    const unsubscribe = onValue(refProdutos, (snapshot) => {
+      if (snapshot.exists()) {
+        const produtosArray = Object.entries(snapshot.val()).map(
+          ([id, produtos]: [string, any]) => ({
+            id,
+            nomeProduto: produtos.nomeProduto,
+          })
+        );
+        setProdutosDisponiveis(produtosArray);
+      } else {
+        setProdutosDisponiveis([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const database = getDatabase();
+    const refOrcamentos = ref(database, "DadosOrcamentos");
+    
+    const unsubscribe = onValue(refOrcamentos, (snapshot) => {
+      if (snapshot.exists()) {
+        const orcamentosArray = Object.entries(snapshot.val()).map(
+          ([id, orcamentos]: [string, any]) => ({
+            id,
+            titulo: orcamentos.titulo,
+          })
+        );
+        setOrcamentosDisponiveis(orcamentosArray);
+      } else {
+        setOrcamentosDisponiveis([]);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   //UseEffect para preencher os campos do formulário com os dados do Trabalho
@@ -176,6 +223,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
         console.log(resultadoDados);
       } else {
         console.log("Nenhum dado encontrado.");
+        toast.info("Nenhum dado encontrado."); // Exibe mensagem de informação
       }
     });
   }, [trabalho]); // Adicionando o 'cliente' como dependência
@@ -185,7 +233,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
       <div className="space-y-8">
         <div className="pb-14">
           <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-6">
-            <div className="sm:col-span-full">
+            <div className="col-span-6">
               <h2 className="text-base/7 font-semibold text-gray-900">Informações Gerais:</h2>
             </div>  
             <div className="sm:col-span-3 col-span-6">
@@ -233,8 +281,11 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                   value={orcamento.id}
                 >
                   <option>Selecione</option>
-                  <option>Orçamento 1</option>
-                  <option>Orçamento 2</option>
+                  { orcamentosDisponiveis.map((orcamento) => (
+                    <option key={orcamento.id} value={orcamento.id}>  
+                      {orcamento.titulo}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDownIcon
                   aria-hidden="true"
@@ -292,17 +343,26 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
             </div>
 
             <div className="sm:col-span-2 col-span-6">
-              <label htmlFor="garantia" className="block text-sm/6 font-medium text-gray-900">
+            <label htmlFor="garantia" className="block text-sm/6 font-medium text-gray-900">
                 Tempo de Garantia
               </label>
-              <div className="mt-2">
-                <input
+              <div className="mt-2 grid grid-cols-1">
+                <select
                   id="garantia"
                   name="garantia"
-                  type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   onChange={(e) => setGarantia(e.target.value)}
                   value={garantia}
+                >
+                  <option>Selecione</option>
+                  <option>1 meses</option>
+                  <option>3 meses</option>
+                  <option>6 meses</option>
+                  <option>1 ano</option>
+                </select>
+                <ChevronDownIcon
+                  aria-hidden="true"
+                  className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
                 />
               </div>
             </div>
@@ -331,11 +391,11 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
               </div>
             </div>
 
-            <div className='sm:col-span-full mt-3'>
+            <div className='col-span-6 mt-3'>
               <h2 className="text-base/7 font-semibold text-gray-900">Peças Utilizadas</h2>
             </div>
 
-            <div className="sm:col-span-2 col-span-3">
+            <div className="sm:col-span-2 col-span-6">
               <label htmlFor="produtos" className="block text-sm/6 font-medium text-gray-900">
                 Produtos
               </label>
@@ -348,8 +408,11 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                   value={produtos}
                 >
                   <option>Selecione</option>
-                  <option>Produto 1</option>
-                  <option>Produto 2</option>
+                  {produtosDisponiveis.map((produto) => (
+                    <option key={produto.id} value={produto.nomeProduto}>
+                      {produto.nomeProduto}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDownIcon
                   aria-hidden="true"
@@ -358,7 +421,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
               </div>
             </div>
 
-            <div className="col-span-1">
+            <div className="sm:col-span-1 col-span-6">
               <label htmlFor="quantidade" className="block text-sm/6 font-medium text-gray-900">
                 Quantidade
               </label>
@@ -374,7 +437,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
               </div>
             </div>
 
-            <div className="col-span-1 flex items-end">
+            <div className="sm:col-span-1 col-span-6 flex items-end">
                 <button
                     type="button"
                     onClick={() => {
@@ -390,35 +453,39 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
             </div>
 
             <div className="sm:col-span-4 col-span-6">
-              <table className='min-w-full border border-gray-300'>
-                <thead className='bg-gray-200'>
-                  <tr>
-                    <th className="text-left border">Produto</th>
-                    <th className="text-left border">Quantidade</th>
-                    <th className="text-left border">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                {listaProdutos.map((item, index) => (
-                    <tr key={index}>
-                    <td className='border'>{item.produto}</td>
-                    <td className='border'>{item.quantidade}</td>
-                    <td className='border'>
-                        <button
-                        type="button"
-                        className="text-red-500"
-                        onClick={() => {
-                            const novaLista = listaProdutos.filter((_, i) => i !== index);
-                            setListaProdutos(novaLista);
-                        }}
-                        >
-                        Remover
-                        </button>
-                    </td>
+              {
+                listaProdutos.length === 0 ? 
+                <p className='text-sm text-gray-500'>Nenhum produto adicionado.</p> 
+                :
+                <table className='min-w-full'>
+                  <thead className='bg-second-white'>
+                    <tr>
+                      <th className="text-left border border-main-blue px-1 py-1 text-main-blue">Produto</th>
+                      <th className="text-left border border-main-blue px-1 py-1 text-main-blue">Quantidade</th>
+                      <th className="text-left border border-main-blue px-1 py-1 text-main-blue">Ações</th>
                     </tr>
-                ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                  {listaProdutos.map((item, index) => (
+                      <tr key={index} className="border border-gray-950 bg-third-white">
+                      <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.produto}</td>
+                      <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.quantidade}</td>
+                      <td className='border border-gray-950 px-1 py-1 bg-third-white text-center'>
+                      <button
+                          type="button"
+                          onClick={() => {
+                              const novaLista = listaProdutos.filter((_, i) => i !== index);
+                              setListaProdutos(novaLista);
+                          }}
+                          >
+                           <TrashIcon className="w-5 h-5 text-main-blue cursor-pointer" />
+                          </button>
+                      </td>
+                      </tr>
+                  ))}
+                  </tbody>
+                </table>
+              }
             </div>
 
             <div className='hidden sm:block sm:col-span-2'></div>
@@ -528,18 +595,18 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-6">
-        <Link href="/home/trabalhos">
-          <button type="button" className="text-sm/6 font-semibold text-main-white px-3 py-2 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-            Cancelar
-          </button>
-        </Link>
+      <div className="mt-6 flex items-center justify-end gap-x-10">
         <button
           type="submit"
-          className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          className="text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-md hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           Salvar
         </button>
+        <Link href="/home/trabalhos">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-5 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+            Cancelar
+          </button>
+        </Link>
       </div>
     </form>
   )

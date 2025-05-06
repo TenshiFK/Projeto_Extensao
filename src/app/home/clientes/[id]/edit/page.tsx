@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { ref, get } from "firebase/database";
 import { database } from "../../../../services/firebase/firebaseconfig";
 import NewEditClientForm from "@/app/components/forms/NewEditClient";
+import Link from "next/link";
+import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
 interface Cliente {
   nome: string;
@@ -54,6 +56,11 @@ export default function Page() {
 
   return (
     <main>
+      <div className="mb-4">
+          <Link href="/home/clientes">
+            <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer"/>
+          </Link>
+        </div>
       <h1 className={`mb-4 text-xl md:text-2xl`}>
         Editar Cliente
       </h1>

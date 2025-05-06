@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getDatabase, ref, push, onValue, update,} from 'firebase/database';
 import { useParams, useRouter } from 'next/navigation'; // Importando o useRouter
+import { toast } from 'react-toastify';
 
 interface Produto {
   id?: number;
@@ -31,6 +32,8 @@ export default function NewEditProdutoForm({ produto }: Props) {
     const [quantidade, setQuantidade] = useState('');
     const [fornecedor, setFornecedor] = useState<{ id: string; nomeFornecedor: string }>({ id: '', nomeFornecedor: '' });
     const [descricao, setDescricao] = useState('');
+
+    const [fornecedoresDisponiveis, setFornecedoresDisponiveis] = useState<{ id: string; nomeFornecedor: string }[]>([]); // Estado para armazenar os fornecedores
     
     const {id} = useParams(); // Obtendo o id do produto da URL
     const router = useRouter(); // Usando o hook useRouter para redirecionamento
@@ -53,11 +56,11 @@ export default function NewEditProdutoForm({ produto }: Props) {
         if (produto && id) {
           const refPath = ref(database, `DadosProdutos/${id}`); // Referência ao caminho 'Dados' no Realtime Database
           await update(refPath, dados); // Atualiza os dados do produto existente
-          alert('Produto atualizado com sucesso!');
+          toast.success('Produto atualizado com sucesso!'); // Exibe uma mensagem de sucesso
         } else {
           const refPath = ref(database, 'DadosProdutos'); // Referência ao caminho 'Dados' no Realtime Database
           await push(refPath, dados); // Adiciona os dados do novo produto
-          alert('Produto adicionado com sucesso!');
+          toast.success('Produto cadastrado com sucesso!'); // Exibe uma mensagem de sucesso
         } 
 
         setNomeProduto('');
@@ -72,12 +75,33 @@ export default function NewEditProdutoForm({ produto }: Props) {
       router.push('/home/estoque');}
       catch (error) {
         console.error('Erro ao salvar os dados:', error);
+        toast.error('Erro ao salvar os dados.'); // Exibe uma mensagem de erro
       }
     };
 
     useEffect(() => {
+      const database = getDatabase(); // Inicializa o banco de dados  
+      const refFornecedores = ref(database, 'DadosFornecedores'); // Referência ao caminho 'DadosFornecedores' no Realtime Database
+
+      const unsubscribe = onValue(refFornecedores, (snapshot) => {
+        if (snapshot.exists()) {
+          const fornecedoresArray = Object.entries(snapshot.val()).map(
+            ([id, fornecedorData]: [string, any]) => ({
+            id,
+            nomeFornecedor: fornecedorData.nomeFornecedor,
+          })
+        );
+        setFornecedoresDisponiveis(fornecedoresArray); // Atualiza o estado com os fornecedores disponíveis
+        } else {
+          setFornecedoresDisponiveis([]); // Se não houver fornecedores, define o estado como vazio
+        }
+      });
+
+      return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
       if (produto) {
-        // Preenche os campos do formulário com os dados do cliente, se fornecido
         setNomeProduto(produto.nomeProduto);
         setValor(produto.valor || '');
         setDescricao(produto.descricao || '');
@@ -87,7 +111,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
         setFornecedor(produto.fornecedor || { id: '', nomeFornecedor: '' });
       }
 
-      const refDados = ref(getDatabase(), "Dados");
+      const refDados = ref(getDatabase(), "DadosProdutos");
 
       onValue(refDados, (snapshot) => {
         if (snapshot.exists()) {
@@ -104,6 +128,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
           console.log(resultadoDados);
         } else {
           console.log("Nenhum dado encontrado.");
+          toast.info("Nenhum dado encontrado."); // Exibe uma mensagem informativa
         }
       });
     }, [produto]); // Adicionando o 'peoduto' como dependência
@@ -113,10 +138,10 @@ export default function NewEditProdutoForm({ produto }: Props) {
       <div className="space-y-8">
         <div className="pb-14">
           <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-6">
-            <div className="sm:col-span-full">
+            <div className="col-span-6">
               <h2 className="text-base/7 font-semibold text-gray-900">Informações do Produto:</h2>
             </div>  
-            <div className="sm:col-span-3">
+            <div className="sm:col-span-3 col-span-6">
               <label htmlFor="nomeProduto" className="block text-sm/6 font-medium text-gray-900">
                 Nome do Produto
               </label>
@@ -132,7 +157,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
               </div>
             </div>
 
-            <div className="sm:col-span-3">
+            <div className="sm:col-span-3 col-span-6">
               <label htmlFor="valor" className="block text-sm/6 font-medium text-gray-900">
                 Valor do Produto
               </label>
@@ -148,7 +173,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
               </div>
             </div>
 
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 col-span-6">
               <label htmlFor="dataCompra" className="block text-sm/6 font-medium text-gray-900">
                 Data de Compra
               </label>
@@ -164,7 +189,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
               </div>
             </div>
 
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 col-span-6">
               <label htmlFor="localCompra" className="block text-sm/6 font-medium text-gray-900">
                 Local da Compra
               </label>
@@ -180,7 +205,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
               </div>
             </div>
 
-            <div className="col-span-2">
+            <div className="sm:col-span-2 col-span-6">
               <label htmlFor="quantidade" className="block text-sm/6 font-medium text-gray-900">
                 Quantidade
               </label>
@@ -196,7 +221,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
               </div>
             </div>
 
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 col-span-6">
               <label htmlFor="fornecedores" className="block text-sm/6 font-medium text-gray-900">
                 Fornecedores
               </label>
@@ -205,13 +230,21 @@ export default function NewEditProdutoForm({ produto }: Props) {
                   id="fornecedores"
                   name="fornecedores"
                   className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setFornecedor({ id: e.target.value, nomeFornecedor: e.target.value })}
+                  onChange={(e) => {
+                    const fornecedorId = e.target.value;
+                    const fornecedorSelecionado = fornecedoresDisponiveis.find((f) => f.id === fornecedorId);
+                    if (fornecedorSelecionado) {
+                      setFornecedor({id: fornecedorSelecionado.id, nomeFornecedor: fornecedorSelecionado.nomeFornecedor}); // Atualiza o estado com o fornecedor selecionado
+                    }
+                  }}
                   value={fornecedor.id}
                 >
                   <option>Selecione</option>
-                  <option>Fornecedor 1</option>
-                  <option>Fornecedor 2</option>
-                  <option>Fornecedor 3</option>
+                  {fornecedoresDisponiveis.map((fornecedor) => (
+                    <option key={fornecedor.id} value={fornecedor.id}>
+                      {fornecedor.nomeFornecedor}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDownIcon
                   aria-hidden="true"
@@ -222,7 +255,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
 
             <div className='hidden sm:block sm:col-span-4'></div>
 
-            <div className="sm:col-span-6">
+            <div className="col-span-6">
               <label htmlFor="descricao" className="block text-sm/6 font-medium text-gray-900">
                 Descrição
               </label>
@@ -243,18 +276,18 @@ export default function NewEditProdutoForm({ produto }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-6">
-        <Link href="/home/orcamentos">
-          <button type="button" className="text-sm/6 font-semibold text-main-white px-3 py-2 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-            Cancelar
-          </button>
-        </Link>
+      <div className="mt-6 flex items-center justify-end gap-x-10">
         <button
           type="submit"
-          className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          className="text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-md hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           Salvar
         </button>
+        <Link href="/home/estoque">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-5 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+            Cancelar
+          </button>
+        </Link>
       </div>
     </form>
   )

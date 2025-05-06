@@ -13,7 +13,6 @@ export default function PrivateRoute({ children }: PrivateRouteProps) {
 
   useEffect(() => {
     if (!loading && !user) {
-      // Se o usuário não estiver autenticado, redireciona para a página de login
       router.push("/");
     }
   }, [user, loading, router]);

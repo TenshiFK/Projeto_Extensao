@@ -27,7 +27,7 @@ export default function Page() {
     const searchParams = useSearchParams();
   
     const searchTerm = searchParams.get("search") || "";
-    const tipoFiltro = searchParams.get("tipo") || "";
+    const tipoFiltro = searchParams.get("status") || "";
 
     const [modalOpen, setModalOpen] = useState(false);
     const [modalPDFOpen, setModalPDFOpen] = useState(false);
@@ -80,10 +80,12 @@ export default function Page() {
             const data = snapshot.val();
             const trabalhosData: Trabalho[] = Object.entries(data).map(([key, value]: [string, any]) => ({
               id: key,
-              nome: value.nome || value.cliente?.nome || "Sem nome", // Handle both cases
+              nome: value.cliente?.nome || "Não informado", // Handle both cases
               valor: value.valorTotal || "Não informado",
-              statusOrdem: value.statusOrdem || "Sem status",
-              dataCriacao: value.dataCriacao || "Sem data"
+              statusOrdem: value.statusOrdem || "Não informado",
+              dataCriacao: value.dataCriacao && value.dataCriacao !== "Não informado"
+              ? new Date(value.dataCriacao).toLocaleDateString("pt-BR")
+              : "Não informado",
             }));
             setTrabalhos(trabalhosData);
           } else {
@@ -98,7 +100,7 @@ export default function Page() {
     
       const handleDelete = async (id: string) => {
         try {
-          const trabalhosRef = ref(database, `Dados/${id}`);
+          const trabalhosRef = ref(database, `DadosTrabalhos/${id}`);
           await remove(trabalhosRef);
           setTrabalhos(prevTrabalhos => prevTrabalhos.filter(trabalho => trabalho.id !== id));
         } catch (error) {
@@ -121,7 +123,7 @@ export default function Page() {
         const matchesSearch =
           trabalho.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
           trabalho.valor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          trabalho.statusOrdem.includes(searchTerm) ||
+          trabalho.statusOrdem.toLowerCase().includes(searchTerm.toLowerCase()) ||
           trabalho.dataCriacao.toLowerCase().includes(searchTerm.toLowerCase());
       
         const matchesTipo = tipoFiltro
@@ -148,10 +150,10 @@ export default function Page() {
             value={tipoFiltro}
             onChange={(e) => updateSearchParams("status", e.target.value)}
           >
-            <option value="">Filtrar:</option>
-            <option value="finalizado">Finalizado</option>
-            <option value="andamento">Em andamento</option>
-            <option value="orcado">Apenas Orçado</option>
+            <option value="">Filtrar</option>
+            <option value="Finalizado">Finalizado</option>
+            <option value="Em andamento">Em andamento</option>
+            <option value="Apenas Orçado">Apenas Orçado</option>
           </select>
         </div>
         <Search searchTerm={searchTerm} onSearchChange={(value) => updateSearchParams("search", value)} />

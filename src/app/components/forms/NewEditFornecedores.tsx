@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getDatabase, ref, push, onValue, update,} from 'firebase/database';
 import { useParams, useRouter } from 'next/navigation'; // Importando o useRouter
+import { toast } from 'react-toastify';
 
 interface Fornecedor {
   id?: number;
@@ -58,11 +59,11 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
       if (fornecedor && id) {
         const refPath = ref(database, `DadosFornecedores/${id}`); // Referência ao caminho 'Dados' no Realtime Database
         await update(refPath, dados); // Adiciona os dados no Realtime Database
-        alert("Fornecedor atualizado com sucesso");
+        toast.success("Fornecedor atualizado com sucesso");
       } else {
         const refPath = ref(database, 'DadosFornecedores'); // Referência ao caminho 'Dados' no Realtime Database
         await push(refPath, dados); // Adiciona os dados no Realtime Database
-        alert("Fornecedor cadastrado com sucesso");
+        toast.success("Fornecedor cadastrado com sucesso");
       }
 
       setNomeFornecedor('');
@@ -81,6 +82,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
 
     } catch (error) {
       console.error("Erro ao gravar os dados:", error);
+      toast.error("Erro ao salvar os dados. Tente novamente.");
     }
   };
 
@@ -120,6 +122,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
         console.log(resultadoDados);
       } else {
         console.log("Nenhum dado encontrado.");
+        toast.info("Nenhum dado encontrado.");
       }
     });
   }, [fornecedor]); // Adicionando o 'peoduto' como dependência
@@ -280,7 +283,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
               </div>
             </div>
 
-            <div className="sm:col-span-6">
+            <div className="col-span-6">
               <label htmlFor="descricao" className="block text-sm/6 font-medium text-gray-900">
                 Descrição
               </label>
@@ -300,18 +303,18 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-6">
-        <Link href="/home/fornecedores">
-          <button type="button" className="text-sm/6 font-semibold text-main-white px-3 py-2 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-            Cancelar
-          </button>
-        </Link>
+      <div className="mt-6 flex items-center justify-end gap-x-10">
         <button
           type="submit"
-          className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          className="text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-md hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           Salvar
         </button>
+        <Link href="/home/fornecedores">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-5 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+            Cancelar
+          </button>
+        </Link>
       </div>
     </form>
   )

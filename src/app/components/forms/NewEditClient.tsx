@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getDatabase, ref, push, onValue, update } from 'firebase/database';
 import { useRouter, useParams } from 'next/navigation'; // Importando o useRouter
+import { toast } from 'react-toastify';
 
 
 interface Cliente {
@@ -58,12 +59,12 @@ export default function NewEditClientForm({ cliente }: Props) {
         // Atualizar cliente existente
         const refPath = ref(database, `Dados/${id}`);
         await update(refPath, dados);
-        alert("Cliente atualizado com sucesso");
+        toast.success("Cliente atualizado com sucesso",)
       } else {
         // Criar novo cliente
         const refPath = ref(database, 'Dados');
         await push(refPath, dados);
-        alert("Cliente criado com sucesso");
+        toast.success("Cliente cadastrado com sucesso",)
       }
 
       // Limpar formulário
@@ -81,6 +82,7 @@ export default function NewEditClientForm({ cliente }: Props) {
 
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
+      toast.error("Erro ao salvar dados, tente novamente",)
     }
   };
 
@@ -117,6 +119,7 @@ export default function NewEditClientForm({ cliente }: Props) {
         console.log(resultadoDados);
       } else {
         console.log("Nenhum dado encontrado.");
+        toast.info("Nenhum dado encontrado.");
       }
     });
   }, [cliente]); // Adicionando o 'cliente' como dependência
@@ -190,7 +193,7 @@ export default function NewEditClientForm({ cliente }: Props) {
                 >
                   <option>Selecione</option>
                   <option>Refrigeração</option>
-                  <option>Tercerizado</option>
+                  <option>Terceirizado</option>
                 </select>
                 <ChevronDownIcon
                   aria-hidden="true"
@@ -287,18 +290,18 @@ export default function NewEditClientForm({ cliente }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-6">
-        <Link href="/home/clientes">
-          <button type="button" className="text-sm/6 font-semibold text-main-white px-3 py-2 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-            Cancelar
-          </button>
-        </Link>
+      <div className="mt-6 flex items-center justify-end gap-x-10">
         <button
           type="submit"
-          className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          className="text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-md hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           Salvar
         </button>
+        <Link href="/home/clientes">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-5 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+            Cancelar
+          </button>
+        </Link>
       </div>
     </form>
   )

@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { ref, get } from "firebase/database";
 import { database } from "../../../../services/firebase/firebaseconfig";
 import NewEditProdutoForm from "@/app/components/forms/NewEditEstoque";
+import Link from "next/link";
+import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
 interface Produto {
     nomeProduto: string,
@@ -55,7 +57,12 @@ export default function Page() {
 
   return (
     <main>
-      <h1 className={`mb-4 text-xl md:text-2xl`}>
+      <div className="mb-4">
+          <Link href="/home/estoque">
+            <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer"/>
+          </Link>
+        </div>
+      <h1 className={`mb-4 text-xl md:text-2xl font-semibold`}>
         Editar Produto
       </h1>
       <NewEditProdutoForm produto={produto} />

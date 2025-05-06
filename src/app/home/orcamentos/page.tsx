@@ -10,6 +10,10 @@ import { ref, onValue, remove } from "firebase/database";
 import { database } from "../../services/firebase/firebaseconfig";
 import { paginate } from "@/app/lib/utils";
 import Modal from "@/app/components/modal/modal";
+import ModalOrcamento from "@/app/components/modal/modalOrcamento";
+import pdfMake from "pdfmake/build/pdfmake";
+import * as pdfFonts from "pdfmake/build/vfs_fonts";
+import { logoBase64 } from "@/app/lib/utils";
 
 interface Orcamentos {
   id: string;
@@ -21,15 +25,19 @@ interface Orcamentos {
 }
 
 export default function Page() {
+  
     const [orcamentos, setOrcamento] = useState<Orcamentos[]>([]);
     const router = useRouter();
     const searchParams = useSearchParams();
   
     const searchTerm = searchParams.get("search") || "";
-    const tipoFiltro = searchParams.get("tipo") || "";
+    const tipoFiltro = searchParams.get("garantia") || "";
 
     const [modalOpen, setModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
+    const [modalOrcamentoOpen, setModalOrcamentoOpen] = useState(false);
+    const [orcamentoId, setOrcamentoId] = useState<string | null>(null);
 
     const titlesHead = [
       { name: 'Nome do cliente' },
@@ -43,12 +51,22 @@ export default function Page() {
       setItemToDelete(id);
       setModalOpen(true);
     };
+
+    const openModalOrcamento = (id: string) => {
+      setOrcamentoId(id);
+      setModalOrcamentoOpen(true);
+    };
   
     const closeModal = () => {
       setModalOpen(false);
       setItemToDelete(null);
     };
-  
+
+    const closeModalOrcamento = () => {
+      setModalOrcamentoOpen(false);
+      setOrcamentoId(null);
+    };
+
     const confirmDelete = () => {
       if (itemToDelete) {
         handleDelete(itemToDelete);
@@ -56,8 +74,295 @@ export default function Page() {
       closeModal();
     };
   
-  
+    const confirmExport = () => {
+      if (orcamentoId) {
+        exportarPDF(orcamentoId);
+      }
+      closeModalOrcamento();
+    };
 
+    useEffect(() => {
+      (pdfMake as any).vfs = (pdfFonts as any).vfs;
+    }, []);
+    
+    const exportarPDF = async (id: string) => {
+      try {
+        const orcamentoRef = ref(database, `DadosOrcamentos/${id}`);
+        onValue(orcamentoRef, (snapshot) => {
+          const orcamento = snapshot.val();
+          if (!orcamento) {
+            console.error("Orçamento não encontrado");
+            return;
+          }
+    
+          const {
+            cliente,
+            produtos = [],
+            titulo,
+            valorTotal,
+            valorFrete,
+            garantia,
+            dataCriacao,
+            descricao,
+            solucao,
+            outros,
+          } = orcamento;
+    
+          const docDefinition = {
+            info: {
+              title: titulo || `Orçamento - ${cliente?.nome || "Orçamento"}`, 
+            },
+            content: [
+              {
+                image: logoBase64,
+                width: 70,
+                height: 70,
+                margin: [0, 0, 0, 10],
+              },
+              {
+                alignment: 'justify',
+                columns: [
+                  {
+                    text: "Orçamento",
+                    style: "header",
+                    alignment: "left",                  
+                  },
+                  {
+                    text: `${dataCriacao ? new Date(dataCriacao).toLocaleDateString("pt-BR") : "  /  /  "}`,
+                    alignment: "right",
+                    style: "subheader",
+                  },
+                ],
+              },
+              { text: "Regrigeração Kredenser", style: "subheader",},
+              { text: "CNPJ: 37.881.403/0001-05",
+                style: "details",
+                marginTop: 8,
+              },
+              { text: "Telefone: (42) 99800-0908 / (42) 98849-3666",
+                style: "details",
+              },
+              { canvas: [
+                {
+                  type: 'line',
+                  x1: 0, y1: 0,
+                  x2: 515, y2: 0,
+                  lineWidth: 1,
+                  lineColor: '#002840'
+                }
+              ], 
+              margin: [0, 15, 0, 15],
+              },
+              {
+                text: "Informações do Atendimento",
+                style: "subheader",
+                margin: [0, 15, 0, 10],
+              },
+              {
+                stack: [
+                  {
+                    table: {
+                      widths: ["*", "*"],
+                      body: [
+                        [ // Header do nome do cliente (colSpan de 2)
+                          {
+                            text: "Nome do cliente",
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                            colSpan: 2,
+                          },
+                          {}
+                        ],
+                        [ // Nome do cliente
+                          {
+                            text: cliente?.nome || " - ",
+                            alignment: "left",
+                            colSpan: 2,
+                            margin: [0, 4, 0, 4],
+                          },
+                          {}
+                        ],
+                        [ // Header de Descrição e Solução
+                          {
+                            text: "Descrição do problema",
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                          },
+                          {
+                            text: "Solução do problema",
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                          },
+                        ],
+                        [ // Conteúdo de Descrição e Solução
+                          {
+                            text: descricao || " - ",
+                            alignment: "justify",
+                            margin: [0, 4, 0, 4],
+                          },
+                          {
+                            text: solucao || " - ",
+                            alignment: "justify",
+                            margin: [0, 4, 0, 4],
+                          },
+                        ],
+                      ],
+                    },
+                    layout: {
+                      hLineWidth: function (i, node) {
+                        return (i === 0 || i === node.table.body.length) ? 2 : 1;
+                      },
+                      vLineWidth: function (i, node) {
+                        return (i === 0 || i === node.table.widths.length) ? 2 : 1;
+                      },
+                      hLineColor: function (i, node) {
+                        return (i === 0 || i === node.table.body.length) ? 'black' : 'gray';
+                      },
+                      vLineColor: function (i, node) {
+                        return (i === 0 || i === node.table.widths.length) ? 'black' : 'gray';
+                      },
+                    }
+                  }
+                ],
+                style: "sectionBlock"
+              },                    
+              {
+                table: {
+                  widths: ["*", "*"],
+                  body: [
+                    // Cabeçalho principal
+                    [
+                      {
+                        text: "Produtos",
+                        fillColor: "#f2f2f2",
+                        color: "#333333",
+                        bold: true,
+                        alignment: "center",
+                      },
+                      {
+                        text: "Quantidade",
+                        fillColor: "#f2f2f2",
+                        color: "#333333",
+                        bold: true,
+                        alignment: "center",
+                      },
+                    ],
+                    // Lista de produtos
+                    ...produtos.map((item: any) => [
+                      item.produto || "N/A",
+                      item.quantidade || 0,
+                    ]),
+                    // Header da seção "Outros"
+                    [
+                      {
+                        text: "Outros",
+                        colSpan: 2,
+                        fillColor: "#f2f2f2",
+                        color: "#333333",
+                        bold: true,
+                        alignment: "center",
+                      },
+                      {},
+                    ],
+                    // Conteúdo da seção "Outros"
+                    [
+                      {
+                        text: outros || "N/A",
+                        colSpan: 2,
+                        alignment: "left",
+                        margin: [0, 4, 0, 4],
+                      },
+                      {},
+                    ],
+                  ],
+                },
+                layout: {
+                  hLineWidth: function (i, node) {
+                    return (i === 0 || i === node.table.body.length) ? 2 : 1;
+                  },
+                  vLineWidth: function (i, node) {
+                    return (i === 0 || i === node.table.widths.length) ? 2 : 1;
+                  },
+                  hLineColor: function (i, node) {
+                    return (i === 0 || i === node.table.body.length) ? 'black' : 'gray';
+                  },
+                  vLineColor: function (i, node) {
+                    return (i === 0 || i === node.table.widths.length) ? 'black' : 'gray';
+                  },
+                }
+              },              
+              { 
+                text: [
+                  { text: "Tempo de Garantia: ", bold: true },
+                  { text: garantia || "N/A" },
+                ],
+                margin: [0, 10, 0, 10],
+              },
+              { 
+                text: [
+                  { text: "Valor de Frete: ", bold: true },
+                  { text: `R$ ${parseFloat(valorFrete || 0).toFixed(2)}` },
+                ],
+              },
+              {
+                text: [
+                  {
+                    text: "Valor Total:",
+                    alignment: "right",
+                    bold: true,
+                    fontSize: 13,
+                    margin: [0, 10, 0, 0],
+                  },
+                  {
+                    text: ` R$ ${parseFloat(valorTotal || 0).toFixed(2)}`,
+                    alignment: "right",
+                    fontSize: 13,
+                    margin: [0, 10, 0, 0],
+                  },
+                ],
+              },
+            ],
+            styles: {
+              header: {
+                fontSize: 20,
+                bold: true,
+                alignment: "center",
+              },
+              subheader: {
+                fontSize: 14,
+                bold: true,
+              },
+              details: {
+                fontSize: 10,
+              },
+              sectionHeader: {
+                fontSize: 14,
+                bold: true,
+                margin: [0, 0, 0, 5]
+              },
+              sectionBlock: {
+                margin: [0, 10, 0, 10]
+              }
+            },
+          };
+    
+          pdfMake.createPdf(docDefinition).open();
+        }, {
+          onlyOnce: true,
+        });
+    
+      } catch (error) {
+        console.error("Erro ao gerar PDF:", error);
+      }
+      closeModalOrcamento();
+    };
+    
     useEffect(() => {
         const orcamentosRef = ref(database, "DadosOrcamentos");
     
@@ -66,9 +371,11 @@ export default function Page() {
             const data = snapshot.val();
             const orcamentosData: Orcamentos[] = Object.entries(data).map(([key, value]: [string, any]) => ({
               id: key,
-              nome: value.cliente || "Sem nome",
+              nome: value.cliente.nome || "Sem nome",
               garantia: value.garantia || "Sem garantia",
-              dataCriacao: value.dataCriacao || new Date().toLocaleDateString(),
+              dataCriacao: value.dataCriacao && value.dataCriacao !== "Não informado"
+              ? new Date(value.dataCriacao).toLocaleDateString("pt-BR")
+              : "Não informado",
               valor: value.valorTotal,
             }));
             setOrcamento(orcamentosData);
@@ -82,7 +389,7 @@ export default function Page() {
     
       const handleDelete = async (id: string) => {
         try {
-          const orcamentosRef = ref(database, `Dados/${id}`);
+          const orcamentosRef = ref(database, `DadosOrcamentos/${id}`);
           await remove(orcamentosRef);
           setOrcamento(prevOrcanentos => prevOrcanentos.filter(orcamento => orcamento.id !== id));
         } catch (error) {
@@ -130,13 +437,13 @@ export default function Page() {
             name="statusOrdem"
             className="appearance-none text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-[30px] w-full"
             value={tipoFiltro}
-            onChange={(e) => updateSearchParams("status", e.target.value)}
+            onChange={(e) => updateSearchParams("garantia", e.target.value)}
           >
-            <option value="">Filtrar:</option>
-            <option value="umMes">1 meses</option>
-            <option value="tresMeses">3 meses</option>
-            <option value="seisMeses">6 meses</option>
-            <option value="umAno">1 ano</option>
+            <option value="">Filtrar</option>
+            <option value="1 mês">1 mês</option>
+            <option value="3 meses">3 meses</option>
+            <option value="6 meses">6 meses</option>
+            <option value="1 ano">1 ano</option>
           </select>
         </div>
         <Search searchTerm={searchTerm} onSearchChange={(value) => updateSearchParams("search", value)} />
@@ -150,12 +457,13 @@ export default function Page() {
       </div>
 
       <div className="mt-16">
-        <Tables titlesHead={titlesHead} dataBody={paginatedOrcamentos} basePath="/orcamentos" onDelete={openModal} />
+        <Tables titlesHead={titlesHead} dataBody={paginatedOrcamentos} basePath="/orcamentos" onDelete={openModal} onExport={openModalOrcamento} showExport={true}/>
         <div className="mt-6">
           <Pagination totalPages={totalPages} currentPage={currentPage} />
         </div>
       </div>
       <Modal isOpen={modalOpen} onClose={closeModal} onConfirm={confirmDelete} />
+      <ModalOrcamento isOpen={modalOrcamentoOpen} onClose={closeModalOrcamento} onConfirm={confirmExport} />
     </main>
     );
 }

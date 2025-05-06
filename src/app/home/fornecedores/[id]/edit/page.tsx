@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { ref, get } from "firebase/database";
 import { database } from "../../../../services/firebase/firebaseconfig";
 import NewEditFornecedoresForm from "@/app/components/forms/NewEditFornecedores";
+import Link from "next/link";
+import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
 interface Fornecedor {
     nomeFornecedor: string,
@@ -55,7 +57,12 @@ export default function Page() {
 
   return (
     <main>
-      <h1 className={`mb-4 text-xl md:text-2xl`}>
+      <div className="mb-4">
+        <Link href="/home/fornecedores">
+          <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer"/>
+        </Link>
+      </div>
+      <h1 className={`mb-4 text-xl md:text-2xl font-semibold`}>
         Editar Fornecedor
       </h1>
       <NewEditFornecedoresForm fornecedor={fornecedor} />

@@ -27,7 +27,7 @@ export default function Page() {
     const searchParams = useSearchParams();
   
     const searchTerm = searchParams.get("search") || "";
-    const tipoFiltro = searchParams.get("tipo") || "";
+    const tipoFiltro = searchParams.get("quantidade") || "";
 
     const [modalOpen, setModalOpen] = useState(false);
     const [modalPDFOpen, setModalPDFOpen] = useState(false);
@@ -61,6 +61,7 @@ export default function Page() {
     const exportarPDF = () => {
       // Lógica para exportar o PDF
       console.log("Exportando PDF...");
+      alert("PDF exportado com sucesso!");
       closeModalPDF();
     };
   
@@ -83,7 +84,9 @@ export default function Page() {
               nomeProduto: value.nomeProduto,
               valor: value.valor,
               quantidade: value.quantidade,
-              dataCompra: value.dataCompra,
+              dataCompra: value.dataCompra && value.dataCompra !== "Não informado"
+              ? new Date(value.dataCompra).toLocaleDateString("pt-BR")
+              : "Não informado",
             }));
             setProdutos(produtosData);
           } else {
@@ -122,9 +125,13 @@ export default function Page() {
         produto.quantidade.toLowerCase().includes(searchTerm.toLowerCase()) ||
         produto.dataCompra.toLowerCase().includes(searchTerm.toLowerCase());
     
+        const qtd = parseInt(produto.quantidade) || 0;
+
         const matchesTipo = tipoFiltro
-          ? produto.nomeProduto.toLowerCase() === tipoFiltro.toLowerCase()
-          : true;
+              ? (tipoFiltro === "menosCinco" && qtd < 5) ||
+              (tipoFiltro === "entreCincoDez" && qtd >= 5 && qtd <= 10) ||
+              (tipoFiltro === "maisDez" && qtd > 10)
+            : true;
     
         return matchesSearch && matchesTipo;
       });
@@ -144,13 +151,12 @@ export default function Page() {
             name="statusOrdem"
             className="appearance-none text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-[30px] w-full"
             value={tipoFiltro}
-            onChange={(e) => updateSearchParams("status", e.target.value)}
+            onChange={(e) => updateSearchParams("quantidade", e.target.value)}
           >
-            <option value="">Filtrar:</option>
-            <option value="umMes">1 mês</option>
-            <option value="tresMeses">3 meses</option>
-            <option value="seisMeses">6 meses</option>
-            <option value="umAno">1 ano</option>
+            <option value="">Filtrar</option>
+            <option value="menosCinco"> Menos que 5 </option>
+            <option value="entreCincoDez">Entre 5 e 10</option>
+            <option value="maisDez">Mais que 10</option>
           </select>
         </div>
         <Search searchTerm={searchTerm} onSearchChange={(value) => updateSearchParams("search", value)} />

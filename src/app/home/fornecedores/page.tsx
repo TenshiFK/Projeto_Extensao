@@ -26,7 +26,7 @@ export default function Page() {
   const searchParams = useSearchParams();
 
   const searchTerm = searchParams.get("search") || "";
-  const tipoFiltro = searchParams.get("tipo") || "";
+  const tipoFiltro = searchParams.get("cidade") || "";
 
   const [modalOpen, setModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -65,10 +65,10 @@ export default function Page() {
         const fornecedoresData: Fornecedores[] = Object.entries(data).map(
           ([key, value]: [string, any]) => ({
             id: key,
-            nomeFornecedor: value.nomeFornecedor,
-            telefone: value.telefone,
-            email: value.email,
-            cidade: value.cidade,
+            nomeFornecedor: value.nomeFornecedor || "Não informado",
+            telefone: value.telefone || "Não informado",
+            email: value.email || "Não informado",
+            cidade: value.cidade || "Não informado",
           })
         );
         setFornecedores(fornecedoresData);
@@ -110,8 +110,10 @@ export default function Page() {
       fornecedor.cidade.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesTipo = tipoFiltro
-      ? fornecedor.cidade.toLowerCase() === tipoFiltro.toLowerCase()
-      : true;
+      ? tipoFiltro === "outra"
+      ? fornecedor.cidade.toLowerCase() !== "guarapuava" && fornecedor.cidade.toLowerCase() !== "curitiba"
+      : fornecedor.cidade.toLowerCase() === tipoFiltro.toLowerCase()
+    : true;
 
     return matchesSearch && matchesTipo;
   });
@@ -130,11 +132,11 @@ export default function Page() {
             name="filtroCidade"
             className="appearance-none text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-[30px] w-full"
             value={tipoFiltro}
-            onChange={(e) => updateSearchParams("tipo", e.target.value)}
+            onChange={(e) => updateSearchParams("cidade", e.target.value)}
           >
-            <option value="">Filtrar:</option>
-            <option value="guarapuava">Guarapuava</option>
-            <option value="curitiba">Curitiba</option>
+            <option value="">Filtrar</option>
+            <option value="Guarapuava">Guarapuava</option>
+            <option value="Curitiba">Curitiba</option>
             <option value="outra">Outra Cidade</option>
           </select>
         </div>

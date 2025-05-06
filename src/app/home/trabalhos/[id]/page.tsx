@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { ref, get } from "firebase/database";
 import { database } from "../../../services/firebase/firebaseconfig";
 import Link from "next/link";
+import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
 interface Trabalho {
   cliente: {
@@ -64,8 +65,8 @@ interface Trabalho {
             setError("Trabalho não encontrado");
           }
         } catch (error) {
-          console.error("Erro ao buscar os dados:", error);
-          setError("Erro ao carregar trabalho");
+            console.error("Erro ao buscar os dados:", error);
+            setError("Erro ao carregar trabalho");
         } finally {
           setLoading(false);
         }
@@ -84,31 +85,220 @@ interface Trabalho {
   
     return (
       <main>
-        <h1 className="mb-4 text-xl md:text-2xl"> Cliente: {trabalho.cliente?.nome || "Cliente não especificado"}</h1>
-        <div>
-          <p><strong>Orçamento:</strong> {trabalho.orcamento ? trabalho.orcamento.titulo : "Não informado"}</p>
-          <p><strong>Descrição:</strong> {trabalho.descricao || "Não informado"}</p>
-          <p><strong>Solução:</strong> {trabalho.solucao || "Não informado"}</p>
-          <p><strong>Data Criação:</strong> {trabalho.dataCriacao || "Não informado"}</p>
-          <p><strong>Garantia:</strong> {trabalho.garantia || "Não informado"}</p>
-          <p><strong>Status Ordem:</strong> {trabalho.statusOrdem || "Não informado"}</p>
-          <p><strong>Produtos:</strong></p>
-          <ul>
-            {trabalho.produtos?.map((produto, index) => (
-              <li key={index}>
-                {produto.produto} - Quantidade: {produto.quantidade}
-              </li>
-            ))}
-          </ul>
-          <p><strong>Outros:</strong> {trabalho.outros}</p>
-          <p><strong>Valor Frete:</strong> {trabalho.valorFrete}</p>
-          <p><strong>Valor Total:</strong> {trabalho.valorTotal}</p>
-          <p><strong>Pagamento:</strong> {trabalho.pagamento}</p>
-          <p><strong>Status Pagamento:</strong> {trabalho.statusPagamento}</p>
-        </div>
+        <div className="mb-4">
         <Link href="/home/trabalhos">
-          <button className="border mt-2 px-2">Voltar</button>
+          <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer"/>
         </Link>
+      </div>
+      <h1 className={`mb-4 text-xl md:text-2xl font-semibold`}>
+        Registros do Trabalho
+      </h1>
+        <div className="space-y-8">
+          <div className="pb-14">
+            <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-6">
+              <div className="col-span-6">
+                <h2 className="text-base/7 font-semibold text-gray-900">Informações Gerais:</h2>
+              </div>  
+              <div className="sm:col-span-3 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Cliente
+                </p>
+                <div className="mt-2 grid grid-cols-1">
+                  <div
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                  >
+                    {trabalho.cliente?.nome || " -"}
+                  </div>
+                </div>
+              </div>
+              <div className="sm:col-span-3 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Orçamento
+                </p>
+                <div className="mt-2 grid grid-cols-1">
+                  <div
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                  >
+                    {trabalho.orcamento?.titulo || " -"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="sm:col-span-3 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Descrição
+                </p>
+                <div className="mt-2">
+                <textarea
+                  id="solucao"
+                  name="solucao"
+                  rows={4}
+                  readOnly
+                  disabled
+                  className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm"
+                  value={trabalho.descricao || " - "}
+                  placeholder="Digite a solução aqui..."
+                />
+                </div>
+              </div>
+
+              <div className="sm:col-span-3 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Solução Proposta
+                </p>
+                <div className="mt-2">
+                <textarea
+                  id="solucao"
+                  name="solucao"
+                  rows={4}
+                  readOnly
+                  disabled
+                  className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm"
+                  value={trabalho.solucao || " - "}
+                  placeholder="Digite a solução aqui..."
+                />
+                </div>
+              </div>
+
+              <div className="sm:col-span-2 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Data de Criação
+                </p>
+                <div className="mt-2">
+                  <div
+                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                  >
+                    {trabalho.dataCriacao || " -"}
+                </div>
+              </div>
+              </div>
+
+              <div className="sm:col-span-2 col-span-6">
+              <p className="block text-sm/6 font-medium text-gray-900">
+                  Tempo de Garantia
+                </p>
+                <div className="mt-2 grid grid-cols-1">
+                <div
+                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                  >
+                    {trabalho.garantia || " -"}
+                </div>  
+              </div>
+              </div>
+
+              <div className="sm:col-span-2 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Status do trabalho
+                </p>
+                <div className="mt-2 grid grid-cols-1">
+                  <div
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                  >
+                    {trabalho.statusOrdem || " -"}
+                  </div>
+                </div>
+              </div>
+
+              <div className='col-span-6 mt-3'>
+                <h2 className="text-base/7 font-semibold text-gray-900">Peças Utilizadas</h2>
+              </div>
+
+              <div className="sm:col-span-4 col-span-6">
+                {
+                  trabalho.produtos?.length === 0 ? (
+                    <p className="text-sm/6 font-medium text-gray-900">Nenhum produto informado.</p>
+                  ) : (
+                    <table className='min-w-full'>
+                      <thead className='bg-second-white'>
+                        <tr>
+                          <th className="text-left border border-main-blue px-1 py-1 text-main-blue">Produto</th>
+                          <th className="text-left border border-main-blue px-1 py-1 text-main-blue">Quantidade</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      {trabalho.produtos?.map((item, index) => (
+                          <tr key={index} className="border border-gray-950 bg-third-white">
+                            <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.produto}</td>
+                            <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.quantidade}</td>
+                          </tr>
+                      ))}
+                      </tbody>
+                    </table>
+                  )
+                }
+              </div>
+
+              <div className='hidden sm:block sm:col-span-2'></div>
+
+              <div className="sm:col-span-2 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Outros
+                </p>
+                <div className="mt-2">
+                  <div
+                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                    >
+                    {trabalho.outros || " -"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Valor do Frete
+                </p>
+                <div className="mt-2">
+                  <div
+                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                  >
+                    {trabalho.valorFrete || " -"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Valor Total
+                </p>
+                <div className="mt-2">
+                <div
+                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                >
+                {trabalho.valorTotal || " -"}
+                </div>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Forma de Pagamento
+                </p>
+                <div className="mt-2 grid grid-cols-1">
+                  <div
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                  >
+                    {trabalho.pagamento || " -"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Status do Pagamento
+                </p>
+                <div className="mt-2 grid grid-cols-1">
+                  <div
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                      >
+                    {trabalho.statusPagamento || " -"}
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
       </main>
     );
   }

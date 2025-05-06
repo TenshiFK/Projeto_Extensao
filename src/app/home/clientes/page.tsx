@@ -64,10 +64,10 @@ export default function Page() {
         const data = snapshot.val();
         const clientesData: Cliente[] = Object.entries(data).map(([key, value]: [string, any]) => ({
           id: key,
-          nome: value.nome || "Sem nome",
-          telefone: value.telefone || "Sem Telefone",
-          email: value.email || "Sem Email",
-          tipoCliente: value.tipoCliente || "Não Cadastrado",
+          nome: value.nome || "Não informado",
+          telefone: value.telefone || "Não informado",
+          email: value.email || "Não informado",
+          tipoCliente: value.tipoCliente || "Não informado",
         }));
         setClientes(clientesData);
       } else {
@@ -129,9 +129,9 @@ export default function Page() {
             value={tipoFiltro}
             onChange={(e) => updateSearchParams("tipo", e.target.value)}
           >
-            <option value="">Filtrar:</option>
+            <option value="">Filtrar</option>
             <option value="Refrigeração">Refrigeração</option>
-            <option value="Tercerizado">Tercerizado</option>
+            <option value="Terceirizado">Terceirizado</option>
           </select>
         </div>
         <Search searchTerm={searchTerm} onSearchChange={(value) => updateSearchParams("search", value)} />
