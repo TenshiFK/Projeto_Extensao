@@ -128,7 +128,7 @@ export default function Page() {
                     alignment: "left",                  
                   },
                   {
-                    text: `${dataCriacao ? new Date(dataCriacao).toLocaleDateString("pt-BR") : "  /  /  "}`,
+                    text: `${dataCriacao.split("-").reverse().join("/") || "  /  /  "}`,
                     alignment: "right",
                     style: "subheader",
                   },
@@ -373,9 +373,7 @@ export default function Page() {
               id: key,
               nome: value.cliente.nome || "Sem nome",
               garantia: value.garantia || "Sem garantia",
-              dataCriacao: value.dataCriacao && value.dataCriacao !== "Não informado"
-              ? new Date(value.dataCriacao).toLocaleDateString("pt-BR")
-              : "Não informado",
+              dataCriacao: value.dataCriacao.split("-").reverse().join("/") || "Não informado",
               valor: value.valorTotal,
             }));
             setOrcamento(orcamentosData);

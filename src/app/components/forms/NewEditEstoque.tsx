@@ -62,7 +62,6 @@ export default function NewEditProdutoForm({ produto }: Props) {
           await push(refPath, dados); // Adiciona os dados do novo produto
           toast.success('Produto cadastrado com sucesso!'); // Exibe uma mensagem de sucesso
         } 
-
         setNomeProduto('');
         setValor('');
         setDataCompra('');
@@ -75,13 +74,12 @@ export default function NewEditProdutoForm({ produto }: Props) {
       router.push('/home/estoque');}
       catch (error) {
         console.error('Erro ao salvar os dados:', error);
-        toast.error('Erro ao salvar os dados.'); // Exibe uma mensagem de erro
+        toast.error('Erro ao salvar os dados.'); 
       }
     };
-
     useEffect(() => {
-      const database = getDatabase(); // Inicializa o banco de dados  
-      const refFornecedores = ref(database, 'DadosFornecedores'); // Referência ao caminho 'DadosFornecedores' no Realtime Database
+      const database = getDatabase();
+      const refFornecedores = ref(database, 'DadosFornecedores');
 
       const unsubscribe = onValue(refFornecedores, (snapshot) => {
         if (snapshot.exists()) {

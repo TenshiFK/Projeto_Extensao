@@ -40,7 +40,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const database = getDatabase(); // Inicializando o banco de dados
+    const database = getDatabase();
   
     const dados = {
       nomeFornecedor,
@@ -57,12 +57,12 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
 
     try {
       if (fornecedor && id) {
-        const refPath = ref(database, `DadosFornecedores/${id}`); // Referência ao caminho 'Dados' no Realtime Database
-        await update(refPath, dados); // Adiciona os dados no Realtime Database
+        const refPath = ref(database, `DadosFornecedores/${id}`);
+        await update(refPath, dados);
         toast.success("Fornecedor atualizado com sucesso");
       } else {
-        const refPath = ref(database, 'DadosFornecedores'); // Referência ao caminho 'Dados' no Realtime Database
-        await push(refPath, dados); // Adiciona os dados no Realtime Database
+        const refPath = ref(database, 'DadosFornecedores');
+        await push(refPath, dados);
         toast.success("Fornecedor cadastrado com sucesso");
       }
 
@@ -101,7 +101,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
       setInformacoesAdicionais(fornecedor.informacoesAdicionais || '');
     }
 
-    const refDados = ref(getDatabase(), "DadosFornecedores"); // Referência ao caminho 'Dados' no Realtime Database
+    const refDados = ref(getDatabase(), "DadosFornecedores"); 
 
     onValue(refDados, (snapshot) => {
       if (snapshot.exists()) {
@@ -125,7 +125,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
         toast.info("Nenhum dado encontrado.");
       }
     });
-  }, [fornecedor]); // Adicionando o 'peoduto' como dependência
+  }, [fornecedor]); 
 
   return (
     <form onSubmit={handleSubmit}>

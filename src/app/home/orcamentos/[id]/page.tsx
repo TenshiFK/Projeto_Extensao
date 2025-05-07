@@ -81,7 +81,7 @@ interface Orcamento {
                   alignment: "left",                  
                 },
                 {
-                  text: `${dataCriacao ? new Date(dataCriacao).toLocaleDateString("pt-BR") : "  /  /  "}`,
+                  text: `${dataCriacao.split("-").reverse().join("/") || "  /  /  "}`,
                   alignment: "right",
                   style: "subheader",
                 },
@@ -394,7 +394,7 @@ interface Orcamento {
                   <div
                       className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
                     >
-                      {orcamento.dataCriacao || " - "}
+                      {orcamento.dataCriacao.split("-").reverse().join("/") || " - "}
                     </div>
                 </div>
               </div>

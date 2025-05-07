@@ -62,7 +62,7 @@ interface Fornecedor {
           </Link>
         </div>
         <h1 className={`mb-4 text-xl md:text-2xl font-semibold`}>
-          Editar Fornecedor
+          Registros do Fornecedor
         </h1>
         <div className="space-y-8">
           <div className="pb-14">

@@ -83,9 +83,7 @@ export default function Page() {
               nome: value.cliente?.nome || "Não informado", // Handle both cases
               valor: value.valorTotal || "Não informado",
               statusOrdem: value.statusOrdem || "Não informado",
-              dataCriacao: value.dataCriacao && value.dataCriacao !== "Não informado"
-              ? new Date(value.dataCriacao).toLocaleDateString("pt-BR")
-              : "Não informado",
+              dataCriacao: value.dataCriacao.split("-").reverse().join("/") || "Não informado",
             }));
             setTrabalhos(trabalhosData);
           } else {
