@@ -1,14 +1,14 @@
 'use client';
-import { ChevronDownIcon } from '@heroicons/react/16/solid'
+import { ChevronDownIcon } from '@heroicons/react/16/solid';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { getDatabase, ref, push, onValue, update } from 'firebase/database';
-import { useRouter, useParams } from 'next/navigation'; // Importando o useRouter
+import { collection, addDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'react-toastify';
-
+import { db } from '@/app/services/firebase/firebaseconfig'; // ajuste o caminho conforme seu projeto
 
 interface Cliente {
-  id?: number;
+  id?: string;
   nome: string;
   email: string;
   telefone: string;
@@ -21,7 +21,7 @@ interface Cliente {
 }
 
 interface Props {
-  cliente?: Cliente; // O cliente pode ser opcional (para criação de novos clientes)
+  cliente?: Cliente;
 }
 
 export default function NewEditClientForm({ cliente }: Props) {
@@ -36,11 +36,10 @@ export default function NewEditClientForm({ cliente }: Props) {
   const [complemento, setComplemento] = useState('');
 
   const { id } = useParams();
-  const router = useRouter(); // Usando o hook useRouter para redirecionamento
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const database = getDatabase();
 
     const dados = {
       nome,
@@ -56,18 +55,17 @@ export default function NewEditClientForm({ cliente }: Props) {
 
     try {
       if (cliente && id) {
-        // Atualizar cliente existente
-        const refPath = ref(database, `Dados/${id}`);
-        await update(refPath, dados);
-        toast.success("Cliente atualizado com sucesso",)
+        // Atualizar cliente
+        const docRef = doc(db, 'Clientes', String(id));
+        await updateDoc(docRef, dados);
+        toast.success('Cliente atualizado com sucesso');
       } else {
         // Criar novo cliente
-        const refPath = ref(database, 'Dados');
-        await push(refPath, dados);
-        toast.success("Cliente cadastrado com sucesso",)
+        await addDoc(collection(db, 'Clientes'), dados);
+        toast.success('Cliente cadastrado com sucesso');
       }
 
-      // Limpar formulário
+      // Resetar formulário
       setNome('');
       setEmail('');
       setTelefone('');
@@ -79,50 +77,50 @@ export default function NewEditClientForm({ cliente }: Props) {
       setComplemento('');
 
       router.push('/home/clientes');
-
     } catch (error) {
-      console.error("Erro ao salvar dados:", error);
-      toast.error("Erro ao salvar dados, tente novamente",)
+      console.error('Erro ao salvar dados:', error);
+      toast.error('Erro ao salvar dados, tente novamente');
     }
   };
 
   useEffect(() => {
-    if (cliente) {
-      // Preenche os campos do formulário com os dados do cliente, se fornecido
-      setNome(cliente.nome);
-      setEmail(cliente.email);
-      setTelefone(cliente.telefone);
-      setTipoCliente(cliente.tipoCliente);
-      setEndereco(cliente.endereco || '');
-      setBairro(cliente.bairro || '');
-      setCep(cliente.cep || '');
-      setNumero(cliente.numero || '');
-      setComplemento(cliente.complemento || '');
-    }
-
-    const refDados = ref(getDatabase(), "Dados");
-
-    onValue(refDados, (snapshot) => {
-      if (snapshot.exists()) {
-        const resultadoDados = Object.entries(snapshot.val()).map(([chave, valor]: [string, any]) => ({
-          chave,
-          nome: valor.nome,
-          email: valor.email,
-          telefone: valor.telefone,
-          tipoCliente: valor.tipoCliente,
-          endereco: valor.endereco,
-          bairro: valor.bairro,
-          cep: valor.cep,
-          numero: valor.numero,
-          complemento: valor.complemento,
-        }));
-        console.log(resultadoDados);
-      } else {
-        console.log("Nenhum dado encontrado.");
-        toast.info("Nenhum dado encontrado.");
+    const carregarCliente = async () => {
+      if (cliente) {
+        setNome(cliente.nome);
+        setEmail(cliente.email);
+        setTelefone(cliente.telefone);
+        setTipoCliente(cliente.tipoCliente);
+        setEndereco(cliente.endereco || '');
+        setBairro(cliente.bairro || '');
+        setCep(cliente.cep || '');
+        setNumero(cliente.numero || '');
+        setComplemento(cliente.complemento || '');
+      } else if (id) {
+        // Buscar cliente do Firestore
+        const docRef = doc(db, 'Clientes', String(id));
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data() as Cliente;
+          setNome(data.nome);
+          setEmail(data.email);
+          setTelefone(data.telefone);
+          setTipoCliente(data.tipoCliente);
+          setEndereco(data.endereco || '');
+          setBairro(data.bairro || '');
+          setCep(data.cep || '');
+          setNumero(data.numero || '');
+          setComplemento(data.complemento || '');
+        } else {
+          toast.info('Cliente não encontrado');
+        }
       }
-    });
-  }, [cliente]); // Adicionando o 'cliente' como dependência
+    };
+
+    carregarCliente();
+  }, [cliente, id]);
+
+  // O resto do formulário permanece igual...
+
 
   return (
     <form onSubmit={handleSubmit}>

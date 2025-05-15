@@ -2,28 +2,30 @@
 import { ChevronDownIcon, TrashIcon } from '@heroicons/react/16/solid'
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { getDatabase, ref, push, onValue, update,} from 'firebase/database';
+import { collection, addDoc, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 
+import { db } from '@/app/services/firebase/firebaseconfig';
+
 interface Orcamento {
-  id?: number;
-  titulo: string,
+  id?: string;
+  titulo: string;
   cliente: {
     id: string;
     nome: string;
-  },
-  dataCriacao: string,
-  garantia: string,
-  descricao: string,
-  solucao: string,
+  };
+  dataCriacao: string;
+  garantia: string;
+  descricao: string;
+  solucao: string;
   produtos?: {
     produto: string;
     quantidade: string;
-  }[],
-  outros?: string,
-  valorFrete?: string,
-  valorTotal: string,
+  }[];
+  outros?: string;
+  valorFrete?: string;
+  valorTotal: string;
 }
 
 interface Props {
@@ -32,28 +34,27 @@ interface Props {
 
 export default function NewEditOrcamentoForm({ orcamento }: Props) {
   const [titulo, setTitulo] = useState('');
-  const [cliente, setCliente] = useState<{ id: string; nome: string }>(orcamento?.cliente || { id: '', nome: '' });
+  const [cliente, setCliente] = useState<{ id: string; nome: string }>({ id: '', nome: '' });
   const [dataCriacao, setDataCriacao] = useState('');
   const [garantia, setGarantia] = useState('');
   const [descricao, setDescricao] = useState('');
   const [solucao, setSolucao] = useState('');
   const [produtos, setProdutos] = useState('');
-  const [quantidadeProdutos, setQuantidadeProdutos] = useState(''); 
+  const [quantidadeProdutos, setQuantidadeProdutos] = useState('');
   const [outros, setOutros] = useState('');
   const [valorFrete, setValorFrete] = useState('');
   const [valorTotal, setValorTotal] = useState('');
-
   const [listaProdutos, setListaProdutos] = useState<{ produto: string; quantidade: string }[]>([]);
-  const [clientesDisponiveis, setClientesDisponiveis] = useState<{id: string, nome: string}[]>([]);
-  const [produtosDisponiveis, setProdutosDisponiveis] = useState<{id: string, nomeProduto: string}[]>([]);
 
-  const {id} = useParams();
+  const [clientesDisponiveis, setClientesDisponiveis] = useState<{ id: string; nome: string }[]>([]);
+  const [produtosDisponiveis, setProdutosDisponiveis] = useState<{ id: string; nomeProduto: string }[]>([]);
+
+  const { id } = useParams();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const database = getDatabase();
-  
+
     const dados = {
       titulo,
       cliente,
@@ -69,15 +70,16 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
 
     try {
       if (orcamento && id) {
-        const refPath = ref(database, `DadosOrcamentos/${id}`); 
-        await update(refPath, dados); 
+        const orcamentoRef = doc(db, 'Orcamentos', id as string);
+        await updateDoc(orcamentoRef, dados);
         toast.success('Orçamento atualizado com sucesso!');
       } else {
-        const refPath = ref(database, 'DadosOrcamentos'); 
-        await push(refPath, dados); 
+        const orcamentosRef = collection(db, 'Orcamentos');
+        await addDoc(orcamentosRef, dados);
         toast.success('Orçamento cadastrado com sucesso!');
       }
-      
+
+      // Limpar campos
       setTitulo('');
       setCliente({ id: '', nome: '' });
       setDescricao('');
@@ -90,55 +92,46 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
       setValorFrete('');
       setValorTotal('');
       setListaProdutos([]);
-      
-      // Redireciona para a tela de /home/... após salvar os dados
+
       router.push('/home/orcamentos');
     } catch (error) {
       console.error('Erro ao salvar os dados:', error);
-      toast.error("Erro ao salvar os dados. Tente novamente.");
+      toast.error('Erro ao salvar os dados. Tente novamente.');
     }
   };
 
   useEffect(() => {
-    const database = getDatabase();
-    const refClientes = ref(database, "Dados");
-    
-    const unsubscribe = onValue(refClientes, (snapshot) => {
-      if (snapshot.exists()) {
-        const clientesArray = Object.entries(snapshot.val()).map(
-          ([id, clienteData]: [string, any]) => ({
-            id,
-            nome: clienteData.nome,
-          })
-        );
-        setClientesDisponiveis(clientesArray);
-      } else {
-        setClientesDisponiveis([]);
+    const fetchClientes = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'Clientes'));
+        const lista = snapshot.docs.map(doc => ({
+          id: doc.id,
+          nome: doc.data().nome,
+        }));
+        setClientesDisponiveis(lista);
+      } catch (error) {
+        console.error('Erro ao buscar clientes:', error);
       }
-    });
+    };
 
-    return () => unsubscribe();
+    fetchClientes();
   }, []);
 
   useEffect(() => {
-    const database = getDatabase();
-    const refProdutos = ref(database, "DadosProdutos");
-    
-    const unsubscribe = onValue(refProdutos, (snapshot) => {
-      if (snapshot.exists()) {
-        const produtosArray = Object.entries(snapshot.val()).map(
-          ([id, produtos]: [string, any]) => ({
-            id,
-            nomeProduto: produtos.nomeProduto,
-          })
-        );
-        setProdutosDisponiveis(produtosArray);
-      } else {
-        setProdutosDisponiveis([]);
+    const fetchProdutos = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'Produtos'));
+        const lista = snapshot.docs.map(doc => ({
+          id: doc.id,
+          nomeProduto: doc.data().nomeProduto,
+        }));
+        setProdutosDisponiveis(lista);
+      } catch (error) {
+        console.error('Erro ao buscar produtos:', error);
       }
-    });
+    };
 
-    return () => unsubscribe();
+    fetchProdutos();
   }, []);
 
   useEffect(() => {
@@ -154,33 +147,7 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
       setValorFrete(orcamento.valorFrete || '');
       setValorTotal(orcamento.valorTotal);
     }
-
-    const refDados = ref(getDatabase(), "DadosOrcamentos");
-
-    onValue(refDados, (snapshot) => {
-      if (snapshot.exists()) {
-        const resultadoDados = Object.entries(snapshot.val()).map(([key, valor]: [string, any]) => ({
-          key,
-          titulo: valor.titulo,
-          cliente: valor.cliente,
-          descricao: valor.descricao,
-          solucao: valor.solucao,
-          dataCriacao: valor.dataCriacao,
-          garantia: valor.garantia,
-          produtos: valor.produtos,
-          outros: valor.outros,
-          valorFrete: valor.valorFrete,
-          valorTotal: valor.valorTotal,
-        }));
-        console.log(resultadoDados);
-      } else {
-        console.log("Nenhum dado encontrado.");
-        toast.info("Nenhum dado encontrado.");
-      }
-    });
   }, [orcamento]);
-
-
 
   return (
     <form onSubmit={handleSubmit}>
@@ -189,7 +156,7 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
           <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-6">
             <div className="col-span-6">
               <h2 className="text-base/7 font-semibold text-gray-900">Informações Gerais:</h2>
-            </div>  
+            </div>
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="titulo" className="block text-sm/6 font-medium text-gray-900">
                 Título
@@ -284,14 +251,14 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
               </label>
               <div className="mt-2">
                 <textarea
-                id="descricao"
-                name="descricao"
-                rows={4}
-                className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm"
-                onChange={(e) => setDescricao(e.target.value)}
-                value={descricao}
-                placeholder="Digite a descrição do problema aqui..."
-              />
+                  id="descricao"
+                  name="descricao"
+                  rows={4}
+                  className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm"
+                  onChange={(e) => setDescricao(e.target.value)}
+                  value={descricao}
+                  placeholder="Digite a descrição do problema aqui..."
+                />
               </div>
             </div>
 
@@ -301,14 +268,14 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
               </label>
               <div className="mt-2">
                 <textarea
-                id="solucao"
-                name="solucao"
-                rows={4}
-                className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm"
-                onChange={(e) => setSolucao(e.target.value)}
-                value={solucao}
-                placeholder="Digite a solução aqui..."
-              />
+                  id="solucao"
+                  name="solucao"
+                  rows={4}
+                  className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm"
+                  onChange={(e) => setSolucao(e.target.value)}
+                  value={solucao}
+                  placeholder="Digite a solução aqui..."
+                />
               </div>
             </div>
 
@@ -359,53 +326,53 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
             </div>
 
             <div className="sm:col-span-1 col-span-6 flex items-end">
-                <button
-                    type="button"
-                    onClick={() => {
-                        if (produtos && quantidadeProdutos) {
-                        setListaProdutos([...listaProdutos, { produto: produtos, quantidade: quantidadeProdutos }]);
-                        setProdutos('');
-                        setQuantidadeProdutos('');
-                        }
-                    }}
-                    className='bg-main-blue text-main-white rounded-md px-3 py-2 text-sm font-semibold shadow-xs hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
-                    Adicionar
-                </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (produtos && quantidadeProdutos) {
+                    setListaProdutos([...listaProdutos, { produto: produtos, quantidade: quantidadeProdutos }]);
+                    setProdutos('');
+                    setQuantidadeProdutos('');
+                  }
+                }}
+                className='bg-main-blue text-main-white rounded-md px-3 py-2 text-sm font-semibold shadow-xs hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
+                Adicionar
+              </button>
             </div>
 
             <div className="sm:col-span-4 col-span-6">
               {
                 listaProdutos.length === 0 ?
-                <p className='text-sm text-gray-500'>Nenhum produto adicionado ainda.</p> 
-                :
-                <table className='min-w-full'>
-                  <thead className='bg-second-white'>
-                    <tr>
-                      <th className="text-left border border-main-blue px-1 py-1 text-main-blue">Produto</th>
-                      <th className="text-left border border-main-blue px-1 py-1 text-main-blue">Quantidade</th>
-                      <th className="text-left border border-main-blue px-1 py-1 text-main-blue">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  {listaProdutos.map((item, index) => (
-                      <tr key={index} className="border border-gray-950 bg-third-white">
-                      <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.produto}</td>
-                      <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.quantidade}</td>
-                      <td className='border border-gray-950 px-1 py-1 bg-third-white text-center'>
-                          <button
-                          type="button"
-                          onClick={() => {
-                              const novaLista = listaProdutos.filter((_, i) => i !== index);
-                              setListaProdutos(novaLista);
-                          }}
-                          >
-                           <TrashIcon className="w-5 h-5 text-main-blue cursor-pointer" />
-                          </button>
-                      </td>
+                  <p className='text-sm text-gray-500'>Nenhum produto adicionado ainda.</p>
+                  :
+                  <table className='min-w-full'>
+                    <thead className='bg-second-white'>
+                      <tr>
+                        <th className="text-left border border-main-blue px-1 py-1 text-main-blue">Produto</th>
+                        <th className="text-left border border-main-blue px-1 py-1 text-main-blue">Quantidade</th>
+                        <th className="text-left border border-main-blue px-1 py-1 text-main-blue">Ações</th>
                       </tr>
-                  ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {listaProdutos.map((item, index) => (
+                        <tr key={index} className="border border-gray-950 bg-third-white">
+                          <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.produto}</td>
+                          <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.quantidade}</td>
+                          <td className='border border-gray-950 px-1 py-1 bg-third-white text-center'>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const novaLista = listaProdutos.filter((_, i) => i !== index);
+                                setListaProdutos(novaLista);
+                              }}
+                            >
+                              <TrashIcon className="w-5 h-5 text-main-blue cursor-pointer" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
               }
             </div>
 
@@ -463,13 +430,13 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
             </div>
 
             <div className="sm:col-span-3 col-span-6">
-                Formas de Pagamentos
-                <ul className='mt-2 bg-second-white w-full border text-sm px-3 py-2 rounded-md'>
-                  <li>• Pix</li>
-                  <li>• Dinheiro</li>
-                  <li>• Cartão de crédito/débito (com acréscimo da máquina.)</li>
-                </ul>
-            
+              Formas de Pagamentos
+              <ul className='mt-2 bg-second-white w-full border text-sm px-3 py-2 rounded-md'>
+                <li>• Pix</li>
+                <li>• Dinheiro</li>
+                <li>• Cartão de crédito/débito (com acréscimo da máquina.)</li>
+              </ul>
+
             </div>
 
           </div>

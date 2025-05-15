@@ -1,135 +1,112 @@
 'use client';
-import { ChevronDownIcon } from '@heroicons/react/16/solid'
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { getDatabase, ref, push, onValue, update,} from 'firebase/database';
-import { useParams, useRouter } from 'next/navigation'; // Importando o useRouter
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { collection, addDoc, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { toast } from 'react-toastify';
+import { db } from '@/app/services/firebase/firebaseconfig'; // Certifique-se de exportar 'db' corretamente
+import Link from 'next/link';
+import { ChevronDownIcon } from '@heroicons/react/16/solid';
 
 interface Produto {
-  id?: number;
-  nomeProduto: string,
-  valor: string,
-  dataCompra: string,
-  localCompra?: string,
-  quantidade: string,
+  id?: string;
+  nomeProduto: string;
+  valor: string;
+  dataCompra: string;
+  localCompra?: string;
+  quantidade: string;
   fornecedor?: {
     id: string;
     nomeFornecedor: string;
-  },
-  descricao?: string,
+  };
+  descricao?: string;
 }
 
 interface Props {
-  produto?: Produto; // O cliente pode ser opcional (para criação de novos clientes)
+  produto?: Produto;
 }
 
 export default function NewEditProdutoForm({ produto }: Props) {
-    const [nomeProduto, setNomeProduto] = useState('');
-    const [valor, setValor] = useState('');
-    const [dataCompra, setDataCompra] = useState('');
-    const [localCompra, setLocalCompra] = useState('');
-    const [quantidade, setQuantidade] = useState('');
-    const [fornecedor, setFornecedor] = useState<{ id: string; nomeFornecedor: string }>({ id: '', nomeFornecedor: '' });
-    const [descricao, setDescricao] = useState('');
+  const [nomeProduto, setNomeProduto] = useState('');
+  const [valor, setValor] = useState('');
+  const [dataCompra, setDataCompra] = useState('');
+  const [localCompra, setLocalCompra] = useState('');
+  const [quantidade, setQuantidade] = useState('');
+  const [fornecedor, setFornecedor] = useState<{ id: string; nomeFornecedor: string }>({ id: '', nomeFornecedor: '' });
+  const [descricao, setDescricao] = useState('');
+  const [fornecedoresDisponiveis, setFornecedoresDisponiveis] = useState<{ id: string; nomeFornecedor: string }[]>([]);
 
-    const [fornecedoresDisponiveis, setFornecedoresDisponiveis] = useState<{ id: string; nomeFornecedor: string }[]>([]); // Estado para armazenar os fornecedores
-    
-    const {id} = useParams(); // Obtendo o id do produto da URL
-    const router = useRouter(); // Usando o hook useRouter para redirecionamento
+  const { id } = useParams();
+  const router = useRouter();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      const database = getDatabase(); 
-    
-      const dados = {
-        nomeProduto,
-        valor,
-        descricao,
-        dataCompra,
-        localCompra,
-        quantidade,
-        fornecedor,
-      };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
+    const dados = {
+      nomeProduto,
+      valor,
+      descricao,
+      dataCompra,
+      localCompra,
+      quantidade,
+      fornecedor,
+    };
+
+    try {
+      if (produto && id) {
+        const docRef = doc(db, 'Produtos', id as string);
+        await updateDoc(docRef, dados);
+        toast.success('Produto atualizado com sucesso!');
+      } else {
+        const collectionRef = collection(db, 'Produtos');
+        await addDoc(collectionRef, dados);
+        toast.success('Produto cadastrado com sucesso!');
+      }
+
+      // Reset
+      setNomeProduto('');
+      setValor('');
+      setDataCompra('');
+      setLocalCompra('');
+      setQuantidade('');
+      setFornecedor({ id: '', nomeFornecedor: '' });
+      setDescricao('');
+
+      router.push('/home/estoque');
+    } catch (error) {
+      console.error('Erro ao salvar os dados:', error);
+      toast.error('Erro ao salvar os dados.');
+    }
+  };
+
+  useEffect(() => {
+    const fetchFornecedores = async () => {
       try {
-        if (produto && id) {
-          const refPath = ref(database, `DadosProdutos/${id}`); // Referência ao caminho 'Dados' no Realtime Database
-          await update(refPath, dados); // Atualiza os dados do produto existente
-          toast.success('Produto atualizado com sucesso!'); // Exibe uma mensagem de sucesso
-        } else {
-          const refPath = ref(database, 'DadosProdutos'); // Referência ao caminho 'Dados' no Realtime Database
-          await push(refPath, dados); // Adiciona os dados do novo produto
-          toast.success('Produto cadastrado com sucesso!'); // Exibe uma mensagem de sucesso
-        } 
-        setNomeProduto('');
-        setValor('');
-        setDataCompra('');
-        setLocalCompra('');
-        setQuantidade('');
-        setFornecedor({ id: '', nomeFornecedor: '' });
-        setDescricao('');
-
-      // Redireciona para a tela de /home/clientes após salvar os dados
-      router.push('/home/estoque');}
-      catch (error) {
-        console.error('Erro ao salvar os dados:', error);
-        toast.error('Erro ao salvar os dados.'); 
+        const fornecedoresRef = collection(db, 'Fornecedores');
+        const snapshot = await getDocs(fornecedoresRef);
+        const lista = snapshot.docs.map(doc => ({
+          id: doc.id,
+          nomeFornecedor: doc.data().nomeFornecedor,
+        }));
+        setFornecedoresDisponiveis(lista);
+      } catch (error) {
+        console.error('Erro ao carregar fornecedores:', error);
       }
     };
-    useEffect(() => {
-      const database = getDatabase();
-      const refFornecedores = ref(database, 'DadosFornecedores');
 
-      const unsubscribe = onValue(refFornecedores, (snapshot) => {
-        if (snapshot.exists()) {
-          const fornecedoresArray = Object.entries(snapshot.val()).map(
-            ([id, fornecedorData]: [string, any]) => ({
-            id,
-            nomeFornecedor: fornecedorData.nomeFornecedor,
-          })
-        );
-        setFornecedoresDisponiveis(fornecedoresArray); // Atualiza o estado com os fornecedores disponíveis
-        } else {
-          setFornecedoresDisponiveis([]); // Se não houver fornecedores, define o estado como vazio
-        }
-      });
+    fetchFornecedores();
+  }, []);
 
-      return () => unsubscribe();
-    }, []);
-
-    useEffect(() => {
-      if (produto) {
-        setNomeProduto(produto.nomeProduto);
-        setValor(produto.valor || '');
-        setDescricao(produto.descricao || '');
-        setDataCompra(produto.dataCompra);
-        setLocalCompra(produto.localCompra || '');
-        setQuantidade(produto.quantidade);
-        setFornecedor(produto.fornecedor || { id: '', nomeFornecedor: '' });
-      }
-
-      const refDados = ref(getDatabase(), "DadosProdutos");
-
-      onValue(refDados, (snapshot) => {
-        if (snapshot.exists()) {
-          const resultadoDados = Object.entries(snapshot.val()).map(([key, valor]: [string, any]) => ({
-            key,
-            nomeProduto: valor.nomeProduto,
-            valor: valor.valor,
-            descricao: valor.descricao,
-            dataCompra: valor.dataCompra,
-            localCompra: valor.localCompra,
-            quantidade: valor.quantidade,
-            fornecedor: valor.fornecedor,
-          }));
-          console.log(resultadoDados);
-        } else {
-          console.log("Nenhum dado encontrado.");
-          toast.info("Nenhum dado encontrado."); // Exibe uma mensagem informativa
-        }
-      });
-    }, [produto]); // Adicionando o 'peoduto' como dependência
+  useEffect(() => {
+    if (produto) {
+      setNomeProduto(produto.nomeProduto);
+      setValor(produto.valor || '');
+      setDescricao(produto.descricao || '');
+      setDataCompra(produto.dataCompra);
+      setLocalCompra(produto.localCompra || '');
+      setQuantidade(produto.quantidade);
+      setFornecedor(produto.fornecedor || { id: '', nomeFornecedor: '' });
+    }
+  }, [produto]);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -138,7 +115,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
           <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-6">
             <div className="col-span-6">
               <h2 className="text-base/7 font-semibold text-gray-900">Informações do Produto:</h2>
-            </div>  
+            </div>
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="nomeProduto" className="block text-sm/6 font-medium text-gray-900">
                 Nome do Produto
@@ -232,7 +209,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
                     const fornecedorId = e.target.value;
                     const fornecedorSelecionado = fornecedoresDisponiveis.find((f) => f.id === fornecedorId);
                     if (fornecedorSelecionado) {
-                      setFornecedor({id: fornecedorSelecionado.id, nomeFornecedor: fornecedorSelecionado.nomeFornecedor}); // Atualiza o estado com o fornecedor selecionado
+                      setFornecedor({ id: fornecedorSelecionado.id, nomeFornecedor: fornecedorSelecionado.nomeFornecedor }); // Atualiza o estado com o fornecedor selecionado
                     }
                   }}
                   value={fornecedor.id}
@@ -258,15 +235,15 @@ export default function NewEditProdutoForm({ produto }: Props) {
                 Descrição
               </label>
               <div className="mt-2">
-              <textarea
-                id="descricao"
-                name="descricao"
-                rows={4}
-                className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm"
-                onChange={(e) => setDescricao(e.target.value)}
-                value={descricao}
-                placeholder="Digite a descrição do produto aqui..."
-              />
+                <textarea
+                  id="descricao"
+                  name="descricao"
+                  rows={4}
+                  className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm"
+                  onChange={(e) => setDescricao(e.target.value)}
+                  value={descricao}
+                  placeholder="Digite a descrição do produto aqui..."
+                />
               </div>
             </div>
 

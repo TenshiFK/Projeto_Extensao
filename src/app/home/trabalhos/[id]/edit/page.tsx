@@ -2,36 +2,36 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ref, get } from "firebase/database";
-import { database } from "../../../../services/firebase/firebaseconfig";
+import { doc, getDoc } from "firebase/firestore";
+import { firestore } from "../../../../services/firebase/firebaseconfig";
 import NewEditTrabalhoForm from "@/app/components/forms/NewEditTrabalho";
 import Link from "next/link";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
 interface Trabalho {
-    cliente: {
-        id: string;
-        nome: string;
-      },
-      orcamento?: {
-        id: string;
-        titulo: string;
-      },
-      descricao: string,
-      solucao: string,
-      dataCriacao: string,
-      garantia: string,
-      statusOrdem: string,
-      produtos?: {
-        produto: string;
-        quantidade: string;
-      }[],
-      outros?: string,
-      valorFrete?: string,
-      valorTotal: string,
-      pagamento: string,
-      statusPagamento: string,
-  }
+  cliente: {
+    id: string;
+    nome: string;
+  };
+  orcamento?: {
+    id: string;
+    titulo: string;
+  };
+  descricao: string;
+  solucao: string;
+  dataCriacao: string;
+  garantia: string;
+  statusOrdem: string;
+  produtos?: {
+    produto: string;
+    quantidade: string;
+  }[];
+  outros?: string;
+  valorFrete?: string;
+  valorTotal: string;
+  pagamento: string;
+  statusPagamento: string;
+}
 
 export default function Page() {
   const { id } = useParams();
@@ -43,9 +43,11 @@ export default function Page() {
 
     const fetchData = async () => {
       try {
-        const snapshot = await get(ref(database, `DadosTrabalhos/${id}`));
+        const trabalhoRef = doc(firestore, "Trabalhos", String(id));
+        const snapshot = await getDoc(trabalhoRef);
+
         if (snapshot.exists()) {
-            setTrabalho(snapshot.val());
+          setTrabalho(snapshot.data() as Trabalho);
         } else {
           console.log("Trabalho não encontrado");
         }
@@ -66,17 +68,16 @@ export default function Page() {
   if (!trabalho) {
     return <div>Trabalho não encontrado.</div>;
   }
-    return (
-      <main>
-        <div className="mb-4">
-          <Link href="/home/trabalhos">
-            <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer"/>
-          </Link>
-        </div>
-        <h1 className={`mb-4 text-xl md:text-2xl font-semibold`}>
-          Editar Trabalho
-        </h1>
-        <NewEditTrabalhoForm trabalho={trabalho}/>                                         
-      </main>
-    );
+
+  return (
+    <main>
+      <div className="mb-4">
+        <Link href="/home/trabalhos">
+          <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer" />
+        </Link>
+      </div>
+      <h1 className="mb-4 text-xl md:text-2xl font-semibold">Editar Trabalho</h1>
+      <NewEditTrabalhoForm trabalho={trabalho} />
+    </main>
+  );
 }

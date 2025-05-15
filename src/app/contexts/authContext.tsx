@@ -2,6 +2,7 @@
 import { useState, createContext, useEffect, useContext } from 'react';
 import { auth } from '../services/firebase/firebaseconfig';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { toast } from 'react-toastify';
 
 interface AuthContextProps {
     user: User | null;
@@ -18,7 +19,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            console.log("Usuário atual:", currentUser);
             setUser(currentUser);
             setLoading(false);
         });
@@ -31,6 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await signInWithEmailAndPassword(auth, email, password);
         } catch (error) {
             console.log("Erro ao fazer o login", error);
+            toast.error("Erro ao logar, verifique seu e-mail ou senha e tente novamente.");
+            setLoading(false);
         }
     }
 

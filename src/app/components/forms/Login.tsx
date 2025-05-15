@@ -20,11 +20,12 @@ export function LoginForm() {
         await signIn(email, password);
       } catch (error) {
         console.error("Erro ao logar", error);
-        toast.error("Erro ao logar, verifique seu e-mail ou senha e tente novamente.");
-        setLoadingLogin(false); // erro, então podemos parar o loading
+      } finally {
+        setLoadingLogin(false);
       }
     } else {
       toast.warning("Preencha os campos de email e senha");
+      setLoadingLogin(false);
     }
   };
 

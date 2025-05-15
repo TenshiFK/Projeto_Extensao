@@ -7,8 +7,8 @@ import Pagination from "@/app/components/Pagination";
 import Modal from "@/app/components/modal/modal";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { ref, onValue, remove } from "firebase/database";
-import { database } from "../../services/firebase/firebaseconfig";
+import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
+import { firestore } from "../../services/firebase/firebaseconfig";
 import { paginate } from "@/app/lib/utils";
 
 interface Cliente {
@@ -57,22 +57,15 @@ export default function Page() {
   ];
 
   useEffect(() => {
-    const clientesRef = ref(database, "Dados");
-
-    const unsubscribe = onValue(clientesRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const clientesData: Cliente[] = Object.entries(data).map(([key, value]: [string, any]) => ({
-          id: key,
-          nome: value.nome || "Não informado",
-          telefone: value.telefone || "Não informado",
-          email: value.email || "Não informado",
-          tipoCliente: value.tipoCliente || "Não informado",
-        }));
-        setClientes(clientesData);
-      } else {
-        setClientes([]);
-      }
+    const unsubscribe = onSnapshot(collection(firestore, "Clientes"), (snapshot) => {
+      const clientesData: Cliente[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        nome: doc.data().nome || "Não informado",
+        telefone: doc.data().telefone || "Não informado",
+        email: doc.data().email || "Não informado",
+        tipoCliente: doc.data().tipoCliente || "Não informado",
+      }));
+      setClientes(clientesData);
     });
 
     return () => unsubscribe();
@@ -80,8 +73,7 @@ export default function Page() {
 
   const handleDelete = async (id: string) => {
     try {
-      const clienteRef = ref(database, `Dados/${id}`);
-      await remove(clienteRef);
+      await deleteDoc(doc(firestore, "Clientes", id));
       setClientes(prevClientes => prevClientes.filter(cliente => cliente.id !== id));
     } catch (error) {
       console.error("Erro ao excluir cliente:", error);

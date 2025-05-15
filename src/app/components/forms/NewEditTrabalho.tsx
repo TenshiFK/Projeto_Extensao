@@ -1,70 +1,60 @@
 'use client';
-import { ChevronDownIcon } from '@heroicons/react/16/solid'
+import { ChevronDownIcon, TrashIcon } from '@heroicons/react/16/solid'
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { getDatabase, ref, push, onValue, update,} from 'firebase/database';
-import { useParams, useRouter } from 'next/navigation'; // Importando o useRouter
+import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { collection, doc, addDoc, updateDoc, getDocs } from 'firebase/firestore';
+import { db } from '@/app/services/firebase/firebaseconfig'; // ajuste para seu caminho real
 
 interface Trabalho {
-  id?: number;
-  cliente: {
-    id: string;
-    nome: string;
-  },
-  orcamento?: {
-    id: string;
-    titulo: string;
-  },
-  descricao: string,
-  solucao: string,
-  dataCriacao: string,
-  garantia: string,
-  statusOrdem: string,
-  produtos?: {
-    produto: string;
-    quantidade: string;
-  }[],
-  outros?: string,
-  valorFrete?: string,
-  valorTotal: string,
-  pagamento: string,
-  statusPagamento: string,
+  id?: string;
+  cliente: { id: string; nome: string };
+  orcamento?: { id: string; titulo: string };
+  descricao: string;
+  solucao: string;
+  dataCriacao: string;
+  garantia: string;
+  statusOrdem: string;
+  produtos?: { produto: string; quantidade: string }[];
+  outros?: string;
+  valorFrete?: string;
+  valorTotal: string;
+  pagamento: string;
+  statusPagamento: string;
 }
 
 interface Props {
-  trabalho?: Trabalho; // O cliente pode ser opcional (para criação de novos clientes)
+  trabalho?: Trabalho;
 }
 
 export default function NewEditTrabalhoForm({ trabalho }: Props) {
-  const [cliente, setCliente] = useState<{ id: string; nome: string }>(trabalho?.cliente || { id: '', nome: '' });
-  const [orcamento, setOrcamento] = useState<{id: string; titulo: string}>({ id: '', titulo: '' });
+  const [cliente, setCliente] = useState({ id: '', nome: '' });
+  const [orcamento, setOrcamento] = useState({ id: '', titulo: '' });
   const [descricao, setDescricao] = useState('');
   const [solucao, setSolucao] = useState('');
   const [dataCriacao, setDataCriacao] = useState('');
   const [garantia, setGarantia] = useState('');
   const [statusOrdem, setStatusOrdem] = useState('');
   const [produtos, setProdutos] = useState('');
-  const [quantidadeProdutos, setQuantidadeProdutos] = useState(''); 
+  const [quantidadeProdutos, setQuantidadeProdutos] = useState('');
   const [outros, setOutros] = useState('');
   const [valorFrete, setValorFrete] = useState('');
   const [valorTotal, setValorTotal] = useState('');
   const [pagamento, setPagamento] = useState('');
   const [statusPagamento, setStatusPagamento] = useState('');
-
   const [listaProdutos, setListaProdutos] = useState<{ produto: string; quantidade: string }[]>([]);
-  const [clientesDisponiveis, setClientesDisponiveis] = useState<{ id: string; nome: string }[]>([]);
-  const [produtosDisponiveis, setProdutosDisponiveis] = useState<{id: string, nomeProduto: string}[]>([]);
-  const [orcamentosDisponiveis, setOrcamentosDisponiveis] = useState<{id: string, titulo: string}[]>([]);
 
-  const {id} = useParams(); // Obtendo o ID da URL (se necessário)
-  const router = useRouter(); // Usando o hook useRouter para redirecionamento
+  const [clientesDisponiveis, setClientesDisponiveis] = useState<{ id: string; nome: string }[]>([]);
+  const [produtosDisponiveis, setProdutosDisponiveis] = useState<{ id: string; nomeProduto: string }[]>([]);
+  const [orcamentosDisponiveis, setOrcamentosDisponiveis] = useState<{ id: string; titulo: string }[]>([]);
+
+  const { id } = useParams();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const database = getDatabase(); // Inicializando o banco de dados
-  
+
     const dados = {
       cliente,
       orcamento,
@@ -73,7 +63,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
       dataCriacao,
       garantia,
       statusOrdem,
-      produtos: listaProdutos, // Usando a lista de produtos
+      produtos: listaProdutos,
       outros,
       valorFrete,
       valorTotal,
@@ -82,18 +72,19 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
     };
 
     try {
-      if (trabalho && id){
-        const refPath = ref(database, `DadosTrabalhos/${id}`);
-        await update(refPath, dados); // Atualiza os dados no Realtime Database
+      if (trabalho && id) {
+        const trabalhoRef = doc(db, 'Trabalhos', id as string);
+        await updateDoc(trabalhoRef, dados);
         toast.success('Trabalho atualizado com sucesso!');
       } else {
-        const refPath = ref(database, 'DadosTrabalhos'); // Referência ao caminho 'DadosTrabalhos' no Realtime Database
-        await push(refPath, dados); // Adiciona os dados no Realtime Database
+        const trabalhosRef = collection(db, 'Trabalhos');
+        await addDoc(trabalhosRef, dados);
         toast.success('Trabalho cadastrado com sucesso!');
       }
 
-      setCliente({ id: '', nome: ''}); // Limpa o campo de cliente após salvar
-      setOrcamento({ id: '', titulo: ''}); // Limpa o campo de orçamento após salvar
+      // Limpar campos
+      setCliente({ id: '', nome: '' });
+      setOrcamento({ id: '', titulo: '' });
       setDescricao('');
       setSolucao('');
       setDataCriacao('');
@@ -106,84 +97,68 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
       setValorTotal('');
       setPagamento('');
       setStatusPagamento('');
-      setListaProdutos([]); // Limpa a lista de produtos após salvar
+      setListaProdutos([]);
 
-      // Redireciona para a tela de /home/clientes após salvar os dados
       router.push('/home/trabalhos');
-
     } catch (error) {
       console.error('Erro ao salvar os dados:', error);
-      toast.error('Erro ao salvar os dados.'); // Exibe mensagem de erro
+      toast.error('Erro ao salvar os dados.');
     }
   };
 
   useEffect(() => {
-    const database = getDatabase();
-    const refClientes = ref(database, "Dados");
-  
-    const unsubscribe = onValue(refClientes, (snapshot) => {
-      if (snapshot.exists()) {
-        const clientesArray = Object.entries(snapshot.val()).map(
-          ([id, clienteData]: [string, any]) => ({
-            id,
-            nome: clienteData.nome,
-          })
-        );
-        setClientesDisponiveis(clientesArray);
-      } else {
-        setClientesDisponiveis([]);
+    const fetchClientes = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'Clientes'));
+        const lista = snapshot.docs.map(doc => ({
+          id: doc.id,
+          nome: doc.data().nome,
+        }));
+        setClientesDisponiveis(lista);
+      } catch (error) {
+        console.error('Erro ao buscar clientes:', error);
       }
-    });
-  
-    return () => unsubscribe(); // Limpeza do listener quando o componente desmontar
+    };
+
+    fetchClientes();
   }, []);
 
   useEffect(() => {
-    const database = getDatabase();
-    const refProdutos = ref(database, "DadosProdutos");
-    
-    const unsubscribe = onValue(refProdutos, (snapshot) => {
-      if (snapshot.exists()) {
-        const produtosArray = Object.entries(snapshot.val()).map(
-          ([id, produtos]: [string, any]) => ({
-            id,
-            nomeProduto: produtos.nomeProduto,
-          })
-        );
-        setProdutosDisponiveis(produtosArray);
-      } else {
-        setProdutosDisponiveis([]);
+    const fetchProdutos = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'Produtos'));
+        const lista = snapshot.docs.map(doc => ({
+          id: doc.id,
+          nomeProduto: doc.data().nomeProduto,
+        }));
+        setProdutosDisponiveis(lista);
+      } catch (error) {
+        console.error('Erro ao buscar produtos:', error);
       }
-    });
+    };
 
-    return () => unsubscribe();
+    fetchProdutos();
   }, []);
 
   useEffect(() => {
-    const database = getDatabase();
-    const refOrcamentos = ref(database, "DadosOrcamentos");
-    
-    const unsubscribe = onValue(refOrcamentos, (snapshot) => {
-      if (snapshot.exists()) {
-        const orcamentosArray = Object.entries(snapshot.val()).map(
-          ([id, orcamentos]: [string, any]) => ({
-            id,
-            titulo: orcamentos.titulo,
-          })
-        );
-        setOrcamentosDisponiveis(orcamentosArray);
-      } else {
-        setOrcamentosDisponiveis([]);
+    const fetchOrcamentos = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'Orcamentos'));
+        const lista = snapshot.docs.map(doc => ({
+          id: doc.id,
+          titulo: doc.data().titulo,
+        }));
+        setOrcamentosDisponiveis(lista);
+      } catch (error) {
+        console.error('Erro ao buscar orçamentos:', error);
       }
-    });
+    };
 
-    return () => unsubscribe();
+    fetchOrcamentos();
   }, []);
 
-  //UseEffect para preencher os campos do formulário com os dados do Trabalho
   useEffect(() => {
     if (trabalho) {
-      // Preenche os campos do formulário com os dados do cliente, se fornecido
       setCliente(trabalho.cliente);
       setOrcamento(trabalho.orcamento || { id: '', titulo: '' });
       setDescricao(trabalho.descricao);
@@ -198,35 +173,8 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
       setPagamento(trabalho.pagamento);
       setStatusPagamento(trabalho.statusPagamento);
     }
+  }, [trabalho]);
 
-    const refDados = ref(getDatabase(), "DadosTrabalhos");
-
-    onValue(refDados, (snapshot) => {
-      if (snapshot.exists()) {
-        const resultadoDados = Object.entries(snapshot.val()).map(([key, valor]: [string, any]) => ({
-          key,
-          cliente: valor.cliente,
-          orcamento: valor.orcamento,
-          descricao: valor.descricao,
-          solucao: valor.solucao,
-          dataCriacao: valor.dataCriacao,
-          garantia: valor.garantia,
-          statusOrdem: valor.statusOrdem,
-          produtos: valor.produtos,
-          quantidadeProdutos: valor.quantidadeProdutos,
-          outros: valor.outros,
-          valorFrete: valor.valorFrete,
-          valorTotal: valor.valorTotal,
-          pagamento: valor.pagamento,
-          setStatusPagamento: valor.statusPagamento,
-        }));
-        console.log(resultadoDados);
-      } else {
-        console.log("Nenhum dado encontrado.");
-        toast.info("Nenhum dado encontrado."); // Exibe mensagem de informação
-      }
-    });
-  }, [trabalho]); // Adicionando o 'cliente' como dependência
 
   return (
     <form onSubmit={handleSubmit}>

@@ -2,86 +2,84 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ref, get } from "firebase/database";
-import { database } from "../../../services/firebase/firebaseconfig";
+import { doc, getDoc } from "firebase/firestore";
+import { firestore } from "../../../services/firebase/firebaseconfig";
 import Link from "next/link";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
 interface Trabalho {
   cliente: {
-      id: string;
-      nome: string;
-    },
-    orcamento?: {
-      id: string;
-      titulo: string;
-    },
-    descricao: string,
-    solucao: string,
-    dataCriacao: string,
-    garantia: string,
-    statusOrdem: string,
-    produtos?: {
-      produto: string;
-      quantidade: string;
-    }[],
-    outros?: string,
-    valorFrete?: string,
-    valorTotal: string,
-    pagamento: string,
-    statusPagamento: string,
+    id: string;
+    nome: string;
+  };
+  orcamento?: {
+    id: string;
+    titulo: string;
+  };
+  descricao: string;
+  solucao: string;
+  dataCriacao: string;
+  garantia: string;
+  statusOrdem: string;
+  produtos?: {
+    produto: string;
+    quantidade: string;
+  }[];
+  outros?: string;
+  valorFrete?: string;
+  valorTotal: string;
+  pagamento: string;
+  statusPagamento: string;
 }
 
-  export default function TrabalhoDetalhes() {
+export default function TrabalhoDetalhes() {
   const { id } = useParams();
   const [trabalho, setTrabalho] = useState<Trabalho | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-      if (!id) return;
-  
-      const fetchData = async () => {
-        try {
-          const snapshot = await get(ref(database, `DadosTrabalhos/${id}`));
-          if (snapshot.exists()) {
-            const data = snapshot.val();
-            setTrabalho({
-              cliente: data.cliente || { id: '', nome: 'Cliente não especificado' },
-              orcamento: data.orcamento || { id: '', titulo: '' },
-              descricao: data.descricao || '',
-              solucao: data.solucao || '',
-              dataCriacao: data.dataCriacao || '',
-              garantia: data.garantia || '',
-              statusOrdem: data.statusOrdem || '',
-              produtos: data.produtos || [],
-              outros: data.outros || '',
-              valorFrete: data.valorFrete || '',
-              valorTotal: data.valorTotal || '0',
-              pagamento: data.pagamento || '',
-              statusPagamento: data.statusPagamento || ''
-            });
-          } else {
-            setError("Trabalho não encontrado");
-          }
-        } catch (error) {
-            console.error("Erro ao buscar os dados:", error);
-            setError("Erro ao carregar trabalho");
-        } finally {
-          setLoading(false);
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchData = async () => {
+      try {
+        const trabalhoRef = doc(firestore, "Trabalhos", String(id));
+        const snapshot = await getDoc(trabalhoRef);
+
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          setTrabalho({
+            cliente: data.cliente || { id: "", nome: "Cliente não especificado" },
+            orcamento: data.orcamento || { id: "", titulo: "" },
+            descricao: data.descricao || "",
+            solucao: data.solucao || "",
+            dataCriacao: data.dataCriacao || "",
+            garantia: data.garantia || "",
+            statusOrdem: data.statusOrdem || "",
+            produtos: data.produtos || [],
+            outros: data.outros || "",
+            valorFrete: data.valorFrete || "",
+            valorTotal: data.valorTotal || "0",
+            pagamento: data.pagamento || "",
+            statusPagamento: data.statusPagamento || ""
+          });
+        } else {
+          setError("Trabalho não encontrado");
         }
-      };
-  
-      fetchData();
-    }, [id]);
-  
-    if (loading) {
-      return <p>Carregando...</p>;
-    }
-  
-    if (!trabalho) {
-      return <p>Trabalho não encontrado.</p>;
-    }
+      } catch (error) {
+        console.error("Erro ao buscar os dados:", error);
+        setError("Erro ao carregar trabalho");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  if (loading) return <p>Carregando...</p>;
+  if (error) return <p>{error}</p>;
+  if (!trabalho) return <p>Trabalho não encontrado.</p>;
   
     return (
       <main>

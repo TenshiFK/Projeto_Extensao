@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Tables from "@/app/components/tables/Tables";
@@ -6,12 +7,12 @@ import Search from "@/app/components/forms/Search";
 import Pagination from "@/app/components/Pagination";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { ref, onValue, remove } from "firebase/database";
-import { database } from "../../services/firebase/firebaseconfig";
+import { collection, getDocs, query, where, deleteDoc, doc } from "firebase/firestore";
+import { firestore } from "../../services/firebase/firebaseconfig";
 import { paginate } from "@/app/lib/utils";
 import Modal from "@/app/components/modal/modal";
 
-interface Fornecedores {
+interface Fornecedor {
   id: string;
   nomeFornecedor: string;
   telefone: string;
@@ -21,7 +22,7 @@ interface Fornecedores {
 }
 
 export default function Page() {
-  const [fornecedores, setFornecedores] = useState<Fornecedores[]>([]);
+  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -57,33 +58,33 @@ export default function Page() {
   ];
 
   useEffect(() => {
-    const fornecedoresRef = ref(database, "DadosFornecedores");
-
-    const unsubscribe = onValue(fornecedoresRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const fornecedoresData: Fornecedores[] = Object.entries(data).map(
-          ([key, value]: [string, any]) => ({
-            id: key,
-            nomeFornecedor: value.nomeFornecedor || "Não informado",
-            telefone: value.telefone || "Não informado",
-            email: value.email || "Não informado",
-            cidade: value.cidade || "Não informado",
-          })
-        );
-        setFornecedores(fornecedoresData);
-      } else {
-        setFornecedores([]);
-      }
-    });
-
-    return () => unsubscribe();
+    const fetchFornecedores = async () => {
+      const fornecedoresRef = collection(firestore, "Fornecedores");
+      const q = query(fornecedoresRef);
+  
+      const querySnapshot = await getDocs(q);
+      const fornecedoresData: Fornecedor[] = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          nomeFornecedor: data.nomeFornecedor || "Não informado",
+          telefone: data.telefone || "Não informado",
+          email: data.email || "Não informado",
+          cidade: data.cidade || "Não informado",
+        };
+      });
+  
+      setFornecedores(fornecedoresData);
+    };
+  
+    fetchFornecedores();
   }, []);
+  
 
   const handleDelete = async (id: string) => {
     try {
-      const fornecedorRef = ref(database, `DadosFornecedores/${id}`);
-      await remove(fornecedorRef);
+      const fornecedorRef = doc(firestore, "Fornecedores", id);
+      await deleteDoc(fornecedorRef);
       setFornecedores((prev) =>
         prev.filter((fornecedor) => fornecedor.id !== id)
       );
@@ -111,9 +112,9 @@ export default function Page() {
 
     const matchesTipo = tipoFiltro
       ? tipoFiltro === "outra"
-      ? fornecedor.cidade.toLowerCase() !== "guarapuava" && fornecedor.cidade.toLowerCase() !== "curitiba"
-      : fornecedor.cidade.toLowerCase() === tipoFiltro.toLowerCase()
-    : true;
+        ? fornecedor.cidade.toLowerCase() !== "guarapuava" && fornecedor.cidade.toLowerCase() !== "curitiba"
+        : fornecedor.cidade.toLowerCase() === tipoFiltro.toLowerCase()
+      : true;
 
     return matchesSearch && matchesTipo;
   });

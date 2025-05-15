@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import { database } from "../../../services/firebase/firebaseconfig";
-import Link from "next/link";
-import Tables from "@/app/components/tables/Tables";
-import { ref, get, onValue } from "firebase/database";
-import Pagination from "@/app/components/Pagination";
-import { paginate } from "@/app/lib/utils";
-import Modal from "@/app/components/modal/modal";
-import { ArrowLeftCircleIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { db } from '../../../services/firebase/firebaseconfig';
+import Link from 'next/link';
+import Tables from '@/app/components/tables/Tables';
+import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
+import Pagination from '@/app/components/Pagination';
+import { paginate } from '@/app/lib/utils';
+import Modal from '@/app/components/modal/modal';
+import { ArrowLeftCircleIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 interface Cliente {
   nome: string;
@@ -24,6 +24,7 @@ interface Cliente {
 }
 
 interface Trabalho {
+  id: string;
   trabalhoId: string;
   nome: string;
   valor: string;
@@ -37,7 +38,7 @@ export default function ClienteDetalhes() {
   const searchParams = useSearchParams();
 
   const [cliente, setCliente] = useState<Cliente | null>(null);
-  const [trabalhos, setTrabalhos] = useState<any[]>([]);
+  const [trabalhos, setTrabalhos] = useState<Trabalho[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -68,74 +69,73 @@ export default function ClienteDetalhes() {
     { name: 'Ações' },
   ];
 
+  const clienteId = Array.isArray(id) ? id[0] : id;
+  
   useEffect(() => {
-    if (!id) return;
-
-    const fetchData = async () => {
+    if (!clienteId) return;
+  
+    const fetchCliente = async () => {
       try {
-        const snapshot = await get(ref(database, `Dados/${id}`));
-        if (snapshot.exists()) {
-          setCliente(snapshot.val());
+        const clienteRef = doc(db, "Clientes", clienteId);
+        const docSnap = await getDoc(clienteRef);
+  
+        if (docSnap.exists()) {
+          setCliente(docSnap.data() as Cliente);
         } else {
           console.log("Cliente não encontrado");
         }
       } catch (error) {
-        console.error("Erro ao buscar os dados:", error);
+        console.error("Erro ao buscar cliente:", error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchData();
-  }, [id]);
+  
+    fetchCliente();
+  }, [clienteId]);
+  
 
   useEffect(() => {
-    const trabalhosRef = ref(database, "DadosTrabalhos");
-    const unsubscribe = onValue(trabalhosRef, (snapshot) => {
-      try {
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          const trabalhosData: Trabalho[] = Object.entries(data)
-            .filter(([_, value]: [string, any]) => value.cliente?.id === id)
-            .map(([key, value]: [string, any]) => ({
-              trabalhoId: key,
-              nome: value.cliente?.nome || " - ",
-              valor: value.valorTotal || " - ",
-              statusOrdem: value.statusOrdem || " - ",
-              dataCriacao: value.dataCriacao && value.dataCriacao !== " - "
-                ? new Date(value.dataCriacao).toLocaleDateString("pt-BR")
-                : " - ",
-            }));
-          setTrabalhos(trabalhosData);
-        } else {
-          setTrabalhos([]);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar trabalhos do cliente:", error);
-      }
+    if (!id) return;
+
+    const q = query(
+      collection(db, 'Trabalhos'),
+      where('cliente.id', '==', id)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const trabalhosData: Trabalho[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          trabalhoId: doc.id,
+          nome: data.cliente?.nome || ' - ',
+          valor: data.valorTotal || ' - ',
+          statusOrdem: data.statusOrdem || ' - ',
+          dataCriacao: data.dataCriacao
+            ? new Date(data.dataCriacao).toLocaleDateString('pt-BR')
+            : ' - ',
+        };
+      });
+      setTrabalhos(trabalhosData);
     });
-  
+
     return () => unsubscribe();
-  }, [id]); // 👈 não esqueça de colocar o id como dependência
-  
+  }, [id]);
 
   const handleDelete = async (id: string) => {
-    // Aqui no futuro você coloca a lógica para deletar trabalhos
-    console.log("Deletar trabalho com id:", id);
+    // Aqui no futuro você pode usar deleteDoc(doc(db, "DadosTrabalhos", id));
+    console.log('Deletar trabalho com id:', id);
   };
 
-  const currentPage = parseInt(searchParams.get("page") || "1");
+  const currentPage = parseInt(searchParams.get('page') || '1');
   const perPage = 15;
   const paginatedTrabalhos = paginate(trabalhos, currentPage, perPage);
   const totalPages = Math.ceil(trabalhos.length / perPage);
 
-  if (loading) {
-    return <p>Carregando...</p>;
-  }
+  if (loading) return <p>Carregando...</p>;
 
-  if (!cliente) {
-    return <p>Cliente não encontrado.</p>;
-  }
+  if (!cliente) return <p>Cliente não encontrado.</p>;
 
   return (
     <main>

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ref, get } from "firebase/database";
-import { database } from "../../../../services/firebase/firebaseconfig";
+import { doc, getDoc } from "firebase/firestore";
+import { firestore } from "../../../../services/firebase/firebaseconfig";
 import NewEditOrcamentoForm from "@/app/components/forms/NewEditOrcamento";
 import Link from "next/link";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
@@ -33,11 +33,11 @@ const DEFAULT_ORCAMENTO: Orcamento = {
     id: '',
     nome: ''
   },
-  dataCriacao: new Date().toISOString().split('T')[0], // Default to today's date
+  dataCriacao: new Date().toISOString().split('T')[0],
   garantia: '',
   descricao: '',
   solucao: '',
-  valorTotal: '0', // Default to '0' instead of empty string
+  valorTotal: '0',
 };
 
 export default function Page() {
@@ -55,13 +55,15 @@ export default function Page() {
 
     const fetchData = async () => {
       try {
-        const snapshot = await get(ref(database, `DadosOrcamentos/${id}`)); // Changed to DadosTrabalhos
-        if (snapshot.exists()) {
-          const data = snapshot.val();
+        const docRef = doc(firestore, "Orcamentos", id as string);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
           setOrcamento({
             ...DEFAULT_ORCAMENTO,
             ...data,
-            valorTotal: data.valorTotal || '0'
+            valorTotal: data.valorTotal || '0',
           });
         } else {
           setError("Orçamento não encontrado");
@@ -89,15 +91,13 @@ export default function Page() {
     <main className="p-4">
       <div className="mb-4">
         <Link href="/home/orcamentos">
-          <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer"/>
+          <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer" />
         </Link>
       </div>
       <h1 className="mb-4 text-xl md:text-2xl font-semibold">
         Editar Orçamento
       </h1>
-      <NewEditOrcamentoForm 
-      orcamento={orcamento} 
-      />
+      <NewEditOrcamentoForm orcamento={orcamento} />
     </main>
   );
 }

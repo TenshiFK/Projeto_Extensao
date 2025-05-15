@@ -7,7 +7,7 @@ interface TableProps {
   dataBody: { id: string | number | null; [key: string]: string | number | null }[]; 
   basePath: string;
   onDelete: (id: string) => void; // Função de exclusão
-  showExport?: false; // Adicionado para exportação
+  showExport?: boolean; // Adicionado para exportação
   onExport?: (id: string) => void; // Função de exportação
 }
 
@@ -59,7 +59,7 @@ export default function Table({ titlesHead, dataBody, basePath, onDelete, showEx
           {dataBody.map((item) => (
             <tr key={String(item.id)} className="border border-gray-950 bg-third-white">
               {Object.keys(item)
-                .filter((key) => key !== "id" && key !== "trabalhoId")
+                .filter((key) => key !== "id" && key !== "trabalhoId" && key !== "idCliente")
                 .map((key, index) => (
                   <td
                     key={index}

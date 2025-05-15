@@ -1,26 +1,27 @@
 'use client';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { getDatabase, ref, push, onValue, update,} from 'firebase/database';
-import { useParams, useRouter } from 'next/navigation'; // Importando o useRouter
+import { collection, addDoc, doc, updateDoc, } from 'firebase/firestore';
+import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
+import { db } from '@/app/services/firebase/firebaseconfig'; // Certifique-se de exportar corretamente o Firestore como `db`
 
 interface Fornecedor {
-  id?: number;
-  nomeFornecedor: string,
-  email?: string,
-  telefone: string,
-  endereco?: string,
-  bairro?: string,
-  cidade?: string,
-  cep?: string,
-  numero?: string,
-  complemento?: string,
-  informacoesAdicionais?: string,
+  id?: string;
+  nomeFornecedor: string;
+  email?: string;
+  telefone: string;
+  endereco?: string;
+  bairro?: string;
+  cidade?: string;
+  cep?: string;
+  numero?: string;
+  complemento?: string;
+  informacoesAdicionais?: string;
 }
 
 interface Props {
-  fornecedor?: Fornecedor; // O cliente pode ser opcional (para criação de novos clientes)
+  fornecedor?: Fornecedor;
 }
 
 export default function NewEditFornecedoresForm({ fornecedor }: Props) {
@@ -35,13 +36,12 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
   const [complemento, setComplemento] = useState('');
   const [informacoesAdicionais, setInformacoesAdicionais] = useState('');
 
-  const {id} = useParams(); // Obtendo o id do fornecedor da URL
-  const router = useRouter(); // Usando o hook useRouter para redirecionamento
+  const { id } = useParams();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const database = getDatabase();
-  
+
     const dados = {
       nomeFornecedor,
       email,
@@ -57,15 +57,16 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
 
     try {
       if (fornecedor && id) {
-        const refPath = ref(database, `DadosFornecedores/${id}`);
-        await update(refPath, dados);
+        const fornecedorRef = doc(db, 'Fornecedores', id as string);
+        await updateDoc(fornecedorRef, dados);
         toast.success("Fornecedor atualizado com sucesso");
       } else {
-        const refPath = ref(database, 'DadosFornecedores');
-        await push(refPath, dados);
+        const fornecedoresRef = collection(db, 'Fornecedores');
+        await addDoc(fornecedoresRef, dados);
         toast.success("Fornecedor cadastrado com sucesso");
       }
 
+      // Limpa o formulário
       setNomeFornecedor('');
       setEmail('');
       setTelefone('');
@@ -77,18 +78,15 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
       setComplemento('');
       setInformacoesAdicionais('');
 
-      // Redireciona para a tela de /home/... após salvar os dados
       router.push('/home/fornecedores');
-
     } catch (error) {
-      console.error("Erro ao gravar os dados:", error);
+      console.error("Erro ao salvar os dados:", error);
       toast.error("Erro ao salvar os dados. Tente novamente.");
     }
   };
 
   useEffect(() => {
     if (fornecedor) {
-      // Preenche os campos do formulário com os dados, se fornecido
       setNomeFornecedor(fornecedor.nomeFornecedor);
       setEmail(fornecedor.email || '');
       setTelefone(fornecedor.telefone);
@@ -100,32 +98,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
       setComplemento(fornecedor.complemento || '');
       setInformacoesAdicionais(fornecedor.informacoesAdicionais || '');
     }
-
-    const refDados = ref(getDatabase(), "DadosFornecedores"); 
-
-    onValue(refDados, (snapshot) => {
-      if (snapshot.exists()) {
-        const resultadoDados = Object.entries(snapshot.val()).map(([key, valor]: [string, any]) => ({
-          key,
-          nomeFornecedor: valor.nomeFornecedor,
-          email: valor.email,
-          telefone: valor.telefone,
-          endereco: valor.endereco,
-          bairro: valor.bairro,
-          cidade: valor.cidade,
-          cep: valor.cep,
-          numero: valor.numero,
-          complemento: valor.complemento,
-          informacoesAdicionais: valor.informacoesAdicionais,
-          
-        }));
-        console.log(resultadoDados);
-      } else {
-        console.log("Nenhum dado encontrado.");
-        toast.info("Nenhum dado encontrado.");
-      }
-    });
-  }, [fornecedor]); 
+  }, [fornecedor]);
 
   return (
     <form onSubmit={handleSubmit}>

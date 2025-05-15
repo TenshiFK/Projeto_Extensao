@@ -2,348 +2,341 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ref, get, onValue } from "firebase/database";
-import { database } from "../../../services/firebase/firebaseconfig";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../../services/firebase/firebaseconfig";
 import Link from "next/link";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 import ModalOrcamento from "@/app/components/modal/modalOrcamento";
 import { logoBase64 } from "@/app/lib/utils";
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { toast } from "react-toastify";
 
 interface Orcamento {
-    titulo: string,
-    cliente: {
-      id: string;
-      nome: string;
-    },
-    dataCriacao: string,
-    garantia: string,
-    descricao: string,
-    solucao: string,
-    produtos?: {
-      produto: string;
-      quantidade: string;
-    }[],
-    outros?: string,
-    valorFrete?: string,
-    valorTotal: string,
-  }
-  export default function OrcamentoDetalhes() {
+  titulo: string;
+  cliente: {
+    id: string;
+    nome: string;
+  };
+  dataCriacao: string;
+  garantia: string;
+  descricao: string;
+  solucao: string;
+  produtos?: {
+    produto: string;
+    quantidade: string;
+  }[];
+  outros?: string;
+  valorFrete?: string;
+  valorTotal: string;
+}
+
+export default function OrcamentoDetalhes() {
   const { id } = useParams();
   const [orcamento, setOrcamento] = useState<Orcamento | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [modalOrcamentoOpen, setModalOrcamentoOpen] = useState(false);
 
   const closeModalOrcamento = () => {
     setModalOrcamentoOpen(false);
   };
 
+    useEffect(() => {
+    (pdfMake as any).vfs = (pdfFonts as any).vfs;
+  }, []);
+
   const exportarPDF = async (id: string) => {
     try {
-      const orcamentoRef = ref(database, `DadosOrcamentos/${id}`);
-      onValue(orcamentoRef, (snapshot) => {
-        const orcamento = snapshot.val();
-        if (!orcamento) {
-          console.error("Orçamento não encontrado");
-          return;
-        }
-  
-        const {
-          cliente,
-          produtos = [],
-          titulo,
-          valorTotal,
-          valorFrete,
-          garantia,
-          dataCriacao,
-          descricao,
-          solucao,
-          outros,
-        } = orcamento;
-  
-        const docDefinition = {
-          info: {
-            title: titulo || `Orçamento - ${cliente?.nome || "Orçamento"}`, 
+      const docRef = doc(db, "Orcamentos", id);
+      const snapshot = await getDoc(docRef);
+      const orcamento = snapshot.data() as Orcamento;
+
+      if (!orcamento) {
+        console.error("Orçamento não encontrado");
+        return;
+      }
+
+      const {
+        cliente,
+        produtos = [],
+        titulo,
+        valorTotal,
+        valorFrete,
+        garantia,
+        dataCriacao,
+        descricao,
+        solucao,
+        outros,
+      } = orcamento;
+
+      const docDefinition = {
+        info: {
+          title: id || `Orçamento - ${cliente?.nome || "Orçamento" || titulo}`,
+        },
+        content: [
+          {
+            image: logoBase64,
+            width: 70,
+            height: 70,
+            margin: [0, 0, 0, 10],
           },
-          content: [
-            {
-              image: logoBase64,
-              width: 70,
-              height: 70,
-              margin: [0, 0, 0, 10],
-            },
-            {
-              alignment: 'justify',
-              columns: [
-                {
-                  text: "Orçamento",
-                  style: "header",
-                  alignment: "left",                  
-                },
-                {
-                  text: `${dataCriacao.split("-").reverse().join("/") || "  /  /  "}`,
-                  alignment: "right",
-                  style: "subheader",
-                },
-              ],
-            },
-            { text: "Regrigeração Kredenser", style: "subheader",},
-            { text: "CNPJ: 37.881.403/0001-05",
-              style: "details",
-              marginTop: 8,
-            },
-            { text: "Telefone: (42) 99800-0908 / (42) 98849-3666",
-              style: "details",
-            },
-            { canvas: [
+          {
+            alignment: 'justify',
+            columns: [
+              {
+                text: "Orçamento",
+                style: "header",
+                alignment: "left",
+              },
+              {
+                text: `${dataCriacao.split("-").reverse().join("/") || "  /  /  "}`,
+                alignment: "right",
+                style: "subheader",
+              },
+            ],
+          },
+          { text: "Refrigeração Kredenser", style: "subheader" },
+          { text: "CNPJ: 37.881.403/0001-05", style: "details", marginTop: 8 },
+          { text: "Telefone: (42) 99800-0908 / (42) 98849-3666", style: "details" },
+          {
+            canvas: [
               {
                 type: 'line',
                 x1: 0, y1: 0,
                 x2: 515, y2: 0,
                 lineWidth: 1,
-                lineColor: '#002840'
-              }
-            ], 
-            margin: [0, 15, 0, 15],
-            },
-            {
-              text: "Informações do Atendimento",
-              style: "subheader",
-              margin: [0, 15, 0, 10],
-            },
-            {
-              stack: [
-                {
-                  table: {
-                    widths: ["*", "*"],
-                    body: [
-                      [ // Header do nome do cliente (colSpan de 2)
-                        {
-                          text: "Nome do cliente",
-                          fillColor: "#f2f2f2",
-                          color: "#333333",
-                          bold: true,
-                          alignment: "center",
-                          colSpan: 2,
-                        },
-                        {}
-                      ],
-                      [ // Nome do cliente
-                        {
-                          text: cliente?.nome || " - ",
-                          alignment: "left",
-                          colSpan: 2,
-                          margin: [0, 4, 0, 4],
-                        },
-                        {}
-                      ],
-                      [ // Header de Descrição e Solução
-                        {
-                          text: "Descrição do problema",
-                          fillColor: "#f2f2f2",
-                          color: "#333333",
-                          bold: true,
-                          alignment: "center",
-                        },
-                        {
-                          text: "Solução do problema",
-                          fillColor: "#f2f2f2",
-                          color: "#333333",
-                          bold: true,
-                          alignment: "center",
-                        },
-                      ],
-                      [ // Conteúdo de Descrição e Solução
-                        {
-                          text: descricao || " - ",
-                          alignment: "justify",
-                          margin: [0, 4, 0, 4],
-                        },
-                        {
-                          text: solucao || " - ",
-                          alignment: "justify",
-                          margin: [0, 4, 0, 4],
-                        },
-                      ],
-                    ],
-                  },
-                  layout: {
-                    hLineWidth: function (i, node) {
-                      return (i === 0 || i === node.table.body.length) ? 2 : 1;
-                    },
-                    vLineWidth: function (i, node) {
-                      return (i === 0 || i === node.table.widths.length) ? 2 : 1;
-                    },
-                    hLineColor: function (i, node) {
-                      return (i === 0 || i === node.table.body.length) ? 'black' : 'gray';
-                    },
-                    vLineColor: function (i, node) {
-                      return (i === 0 || i === node.table.widths.length) ? 'black' : 'gray';
-                    },
-                  }
-                }
-              ],
-              style: "sectionBlock"
-            },                    
-            {
-              table: {
-                widths: ["*", "*"],
-                body: [
-                  // Cabeçalho principal
-                  [
-                    {
-                      text: "Produtos",
-                      fillColor: "#f2f2f2",
-                      color: "#333333",
-                      bold: true,
-                      alignment: "center",
-                    },
-                    {
-                      text: "Quantidade",
-                      fillColor: "#f2f2f2",
-                      color: "#333333",
-                      bold: true,
-                      alignment: "center",
-                    },
-                  ],
-                  // Lista de produtos
-                  ...produtos.map((item: any) => [
-                    item.produto || "N/A",
-                    item.quantidade || 0,
-                  ]),
-                  // Header da seção "Outros"
-                  [
-                    {
-                      text: "Outros",
-                      colSpan: 2,
-                      fillColor: "#f2f2f2",
-                      color: "#333333",
-                      bold: true,
-                      alignment: "center",
-                    },
-                    {},
-                  ],
-                  // Conteúdo da seção "Outros"
-                  [
-                    {
-                      text: outros || "N/A",
-                      colSpan: 2,
-                      alignment: "left",
-                      margin: [0, 4, 0, 4],
-                    },
-                    {},
-                  ],
-                ],
+                lineColor: '#002840',
               },
-              layout: {
-                hLineWidth: function (i, node) {
-                  return (i === 0 || i === node.table.body.length) ? 2 : 1;
-                },
-                vLineWidth: function (i, node) {
-                  return (i === 0 || i === node.table.widths.length) ? 2 : 1;
-                },
-                hLineColor: function (i, node) {
-                  return (i === 0 || i === node.table.body.length) ? 'black' : 'gray';
-                },
-                vLineColor: function (i, node) {
-                  return (i === 0 || i === node.table.widths.length) ? 'black' : 'gray';
-                },
-              }
-            },              
-            { 
-              text: [
-                { text: "Tempo de Garantia: ", bold: true },
-                { text: garantia || "N/A" },
-              ],
-              margin: [0, 10, 0, 10],
-            },
-            { 
-              text: [
-                { text: "Valor de Frete: ", bold: true },
-                { text: `R$ ${parseFloat(valorFrete || 0).toFixed(2)}` },
-              ],
-            },
-            {
-              text: [
-                {
-                  text: "Valor Total:",
-                  alignment: "right",
-                  bold: true,
-                  fontSize: 13,
-                  margin: [0, 10, 0, 0],
-                },
-                {
-                  text: ` R$ ${parseFloat(valorTotal || 0).toFixed(2)}`,
-                  alignment: "right",
-                  fontSize: 13,
-                  margin: [0, 10, 0, 0],
-                },
-              ],
-            },
-          ],
-          styles: {
-            header: {
-              fontSize: 20,
-              bold: true,
-              alignment: "center",
-            },
-            subheader: {
-              fontSize: 14,
-              bold: true,
-            },
-            details: {
-              fontSize: 10,
-            },
-            sectionHeader: {
-              fontSize: 14,
-              bold: true,
-              margin: [0, 0, 0, 5]
-            },
-            sectionBlock: {
-              margin: [0, 10, 0, 10]
-            }
+            ],
+            margin: [0, 15, 0, 15],
           },
-        };
-  
-        pdfMake.createPdf(docDefinition).open();
-      }, {
-        onlyOnce: true,
-      });
-  
+          {
+            text: "Informações do Atendimento",
+            style: "subheader",
+            margin: [0, 15, 0, 10],
+          },
+          {
+            stack: [
+              {
+                table: {
+                  widths: ["*", "*"],
+                  body: [
+                    [
+                      {
+                        text: "Nome do cliente",
+                        fillColor: "#f2f2f2",
+                        color: "#333333",
+                        bold: true,
+                        alignment: "center",
+                        colSpan: 2,
+                      },
+                      {},
+                    ],
+                    [
+                      {
+                        text: cliente?.nome || " - ",
+                        alignment: "left",
+                        colSpan: 2,
+                        margin: [0, 4, 0, 4],
+                      },
+                      {},
+                    ],
+                    [
+                      {
+                        text: "Descrição do problema",
+                        fillColor: "#f2f2f2",
+                        color: "#333333",
+                        bold: true,
+                        alignment: "center",
+                      },
+                      {
+                        text: "Solução do problema",
+                        fillColor: "#f2f2f2",
+                        color: "#333333",
+                        bold: true,
+                        alignment: "center",
+                      },
+                    ],
+                    [
+                      {
+                        text: descricao || " - ",
+                        alignment: "justify",
+                        margin: [0, 4, 0, 4],
+                      },
+                      {
+                        text: solucao || " - ",
+                        alignment: "justify",
+                        margin: [0, 4, 0, 4],
+                      },
+                    ],
+                  ],
+                },
+                layout: {
+                  hLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                    return (i === 0 || i === node.table.body.length) ? 2 : 1;
+                  },
+                  vLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                    return (i === 0 || i === node.table.widths.length) ? 2 : 1;
+                  },
+                  hLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                    return (i === 0 || i === node.table.body.length) ? 'black' : 'gray';
+                  },
+                  vLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                    return (i === 0 || i === node.table.widths.length) ? 'black' : 'gray';
+                  },
+                }            
+              },
+            ],
+            style: "sectionBlock",
+          },
+          {
+            table: {
+              widths: ["*", "*"],
+              body: [
+                [
+                  {
+                    text: "Produtos",
+                    fillColor: "#f2f2f2",
+                    color: "#333333",
+                    bold: true,
+                    alignment: "center",
+                  },
+                  {
+                    text: "Quantidade",
+                    fillColor: "#f2f2f2",
+                    color: "#333333",
+                    bold: true,
+                    alignment: "center",
+                  },
+                ],
+                ...produtos.map((item) => [
+                  item.produto || "N/A",
+                  item.quantidade || 0,
+                ]),
+                [
+                  {
+                    text: "Outros",
+                    colSpan: 2,
+                    fillColor: "#f2f2f2",
+                    color: "#333333",
+                    bold: true,
+                    alignment: "center",
+                  },
+                  {},
+                ],
+                [
+                  {
+                    text: outros || " - ",
+                    colSpan: 2,
+                    alignment: "left",
+                    margin: [0, 4, 0, 4],
+                  },
+                  {},
+                ],
+              ],
+            },
+            layout: {
+              hLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                return (i === 0 || i === node.table.body.length) ? 2 : 1;
+              },
+              vLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                return (i === 0 || i === node.table.widths.length) ? 2 : 1;
+              },
+              hLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                return (i === 0 || i === node.table.body.length) ? 'black' : 'gray';
+              },
+              vLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                return (i === 0 || i === node.table.widths.length) ? 'black' : 'gray';
+              },
+            }            
+          },
+          {
+            text: [
+              { text: "Tempo de Garantia: ", bold: true },
+              { text: garantia || " - " },
+            ],
+            margin: [0, 10, 0, 10],
+          },
+          {
+            text: [
+              { text: "Valor de Frete: ", bold: true },
+              { text: `R$ ${parseFloat(valorFrete || "0").toFixed(2)}` },
+            ],
+          },
+          {
+            text: [
+              {
+                text: "Valor Total:",
+                alignment: "right",
+                bold: true,
+                fontSize: 13,
+                margin: [0, 10, 0, 0],
+              },
+              {
+                text: ` R$ ${parseFloat(valorTotal || "0").toFixed(2)}`,
+                alignment: "right",
+                fontSize: 13,
+                margin: [0, 10, 0, 0],
+              },
+            ],
+          },
+        ],
+        styles: {
+          header: {
+            fontSize: 20,
+            bold: true,
+            alignment: "center",
+          },
+          subheader: {
+            fontSize: 14,
+            bold: true,
+          },
+          details: {
+            fontSize: 10,
+          },
+          sectionHeader: {
+            fontSize: 14,
+            bold: true,
+            margin: [0, 0, 0, 5],
+          },
+          sectionBlock: {
+            margin: [0, 10, 0, 10],
+          },
+        },
+      };
+
+      pdfMake.createPdf(docDefinition).open();
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
+      toast.error("Erro ao gerar PDF. Tente novamente.");
     }
     closeModalOrcamento();
   };
 
-    useEffect(() => {
-      if (!id) return;
-  
-      const fetchData = async () => {
-        try {
-          const snapshot = await get(ref(database, `DadosOrcamentos/${id}`));
-          if (snapshot.exists()) {
-            setOrcamento(snapshot.val());
-          } else {
-            console.log("Orçamento não encontrado");
-          }
-        } catch (error) {
-          console.error("Erro ao buscar os dados:", error);
-        } finally {
-          setLoading(false);
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchData = async () => {
+      try {
+        const docRef = doc(db, "Orcamentos", id as string);
+        const snapshot = await getDoc(docRef);
+        if (snapshot.exists()) {
+          setOrcamento(snapshot.data() as Orcamento);
+        } else {
+          console.log("Orçamento não encontrado");
         }
-      };
-  
-      fetchData();
-    }, [id]);
-  
-    if (loading) {
-      return <p>Carregando...</p>;
-    }
-  
-    if (!orcamento) {
-      return <p>Orçamento não encontrado.</p>;
-    }
+      } catch (error) {
+        console.error("Erro ao buscar os dados:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  if (loading) return <p>Carregando...</p>;
+  if (!orcamento) return <p>Orçamento não encontrado.</p>;
   
     return (
       <main>

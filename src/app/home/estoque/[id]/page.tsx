@@ -2,24 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ref, get } from "firebase/database";
-import { database } from "../../../services/firebase/firebaseconfig";
-import Link from "next/link"; // Importação corrigida
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/app/services/firebase/firebaseconfig"; // use 'db' se for Firestore
+import Link from "next/link";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
-// Definição do tipo para evitar erro de tipagem
 interface Produto {
-    nomeProduto: string,
-    valor: string,
-    dataCompra: string,
-    localCompra?: string,
-    quantidade: string,
-    fornecedor?: {
-      id: string;
-      nomeFornecedor: string;
-    },
-    descricao?: string,
-  }
+  nomeProduto: string;
+  valor: string;
+  dataCompra: string;
+  localCompra?: string;
+  quantidade: string;
+  fornecedor?: {
+    id: string;
+    nomeFornecedor: string;
+  };
+  descricao?: string;
+}
 
 export default function ProdutoDetalhes() {
   const { id } = useParams();
@@ -29,11 +28,13 @@ export default function ProdutoDetalhes() {
   useEffect(() => {
     if (!id) return;
 
-    const fetchData = async () => {
+    const fetchProduto = async () => {
       try {
-        const snapshot = await get(ref(database, `DadosProdutos/${id}`));
-        if (snapshot.exists()) {
-          setProduto(snapshot.val());
+        const docRef = doc(db, "Produtos", String(id));
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setProduto(docSnap.data() as Produto);
         } else {
           console.log("Produto não encontrado");
         }
@@ -44,16 +45,12 @@ export default function ProdutoDetalhes() {
       }
     };
 
-    fetchData();
+    fetchProduto();
   }, [id]);
 
-  if (loading) {
-    return <p>Carregando...</p>;
-  }
+  if (loading) return <p>Carregando...</p>;
 
-  if (!produto) {
-    return <p>Produto não encontrado.</p>;
-  }
+  if (!produto) return <p>Produto não encontrado.</p>;
 
   return (
     <main>
