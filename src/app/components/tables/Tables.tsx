@@ -1,5 +1,5 @@
 'use client';
-import { EyeIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, EyeIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 
 interface TableProps {
@@ -7,9 +7,11 @@ interface TableProps {
   dataBody: { id: string | number | null; [key: string]: string | number | null }[]; 
   basePath: string;
   onDelete: (id: string) => void; // Função de exclusão
+  showExport?: boolean; // Adicionado para exportação
+  onExport?: (id: string) => void; // Função de exportação
 }
 
-export default function Table({ titlesHead, dataBody, basePath, onDelete }: TableProps) {
+export default function Table({ titlesHead, dataBody, basePath, onDelete, showExport, onExport }: TableProps) {
   const router = useRouter();
 
   const handleView = (id: string) => {
@@ -20,10 +22,13 @@ export default function Table({ titlesHead, dataBody, basePath, onDelete }: Tabl
     if (!id) return; // Evita erros caso id seja null
     router.push(`/home/${basePath}/${String(id)}/edit`); // Converte id para string
   };
-  
 
   const handleDelete = (id: string) => {
     onDelete(id); // Só chama a função que o componente pai vai lidar
+  };
+
+  const handleExport = (id: string) => {
+    onExport?.(id); // Chama a função de exportação se fornecida
   };
 
   return (
@@ -54,7 +59,7 @@ export default function Table({ titlesHead, dataBody, basePath, onDelete }: Tabl
           {dataBody.map((item) => (
             <tr key={String(item.id)} className="border border-gray-950 bg-third-white">
               {Object.keys(item)
-                .filter((key) => key !== "id")
+                .filter((key) => key !== "id" && key !== "trabalhoId" && key !== "idCliente")
                 .map((key, index) => (
                   <td
                     key={index}
@@ -66,6 +71,11 @@ export default function Table({ titlesHead, dataBody, basePath, onDelete }: Tabl
                   </td>
                 ))}
               <td className="border-gray-300 px-2 py-2 flex gap-3 justify-center">
+                {showExport && (
+                  <button className="cursor-pointer" onClick={() => handleExport(String(item.id))}>
+                    <ArrowDownTrayIcon className="w-5 h-5 text-main-blue" />
+                  </button>
+                )}
                 <button onClick={() => handleView(String(item.id))} className="cursor-pointer">
                   <EyeIcon className="w-5 h-5 text-main-blue" />
                 </button>

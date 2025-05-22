@@ -2,22 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ref, get } from "firebase/database";
-import { database } from "../../../../services/firebase/firebaseconfig";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/app/services/firebase/firebaseconfig";
 import NewEditProdutoForm from "@/app/components/forms/NewEditEstoque";
+import Link from "next/link";
+import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
 interface Produto {
-    nomeProduto: string,
-    valor: string,
-    dataCompra: string,
-    localCompra?: string,
-    quantidade: string,
-    fornecedor?: {
-      id: string;
-      nomeFornecedor: string;
-    },
-    descricao?: string,
-  }
+  nomeProduto: string;
+  valor: string;
+  dataCompra: string;
+  localCompra?: string;
+  quantidade: string;
+  fornecedor?: {
+    id: string;
+    nomeFornecedor: string;
+  };
+  descricao?: string;
+}
 
 export default function Page() {
   const { id } = useParams();
@@ -29,9 +31,11 @@ export default function Page() {
 
     const fetchData = async () => {
       try {
-        const snapshot = await get(ref(database, `DadosProdutos/${id}`));
-        if (snapshot.exists()) {
-          setProduto(snapshot.val());
+        const produtoRef = doc(db, "Produtos", String(id));
+        const produtoSnap = await getDoc(produtoRef);
+
+        if (produtoSnap.exists()) {
+          setProduto(produtoSnap.data() as Produto);
         } else {
           console.log("Produto não encontrado");
         }
@@ -45,17 +49,18 @@ export default function Page() {
     fetchData();
   }, [id]);
 
-  if (loading) {
-    return <div>Carregando...</div>;
-  }
+  if (loading) return <div>Carregando...</div>;
 
-  if (!produto) {
-    return <div>Produto não encontrado.</div>;
-  }
+  if (!produto) return <div>Produto não encontrado.</div>;
 
   return (
     <main>
-      <h1 className={`mb-4 text-xl md:text-2xl`}>
+      <div className="mb-4">
+        <Link href="/home/estoque">
+          <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer" />
+        </Link>
+      </div>
+      <h1 className="mb-4 text-xl md:text-2xl font-semibold">
         Editar Produto
       </h1>
       <NewEditProdutoForm produto={produto} />

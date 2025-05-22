@@ -1,11 +1,18 @@
 import NewEditClientForm from "@/app/components/forms/NewEditClient";
+import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
 
 export default function Page() {
   
 
     return (
       <main>
-        <h1 className={`mb-4 text-xl md:text-2xl`}>
+        <div className="mb-4">
+          <Link href="/home/clientes">
+            <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer"/>
+          </Link>
+        </div>
+        <h1 className={`mb-4 text-xl md:text-2xl font-semibold`}>
           Novo Cliente
         </h1>
         <NewEditClientForm/>                                         

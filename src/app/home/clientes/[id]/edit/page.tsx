@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ref, get } from "firebase/database";
-import { database } from "../../../../services/firebase/firebaseconfig";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../../../services/firebase/firebaseconfig"; // Firestore corretamente importado
 import NewEditClientForm from "@/app/components/forms/NewEditClient";
+import Link from "next/link";
+import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
 interface Cliente {
   nome: string;
@@ -19,7 +21,8 @@ interface Cliente {
 }
 
 export default function Page() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string;
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,9 +31,11 @@ export default function Page() {
 
     const fetchData = async () => {
       try {
-        const snapshot = await get(ref(database, `Dados/${id}`));
+        const clienteRef = doc(db, "Clientes", id);
+        const snapshot = await getDoc(clienteRef);
+
         if (snapshot.exists()) {
-          setCliente(snapshot.val());
+          setCliente(snapshot.data() as Cliente);
         } else {
           console.log("Cliente não encontrado");
         }
@@ -54,9 +59,12 @@ export default function Page() {
 
   return (
     <main>
-      <h1 className={`mb-4 text-xl md:text-2xl`}>
-        Editar Cliente
-      </h1>
+      <div className="mb-4">
+        <Link href="/home/clientes">
+          <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer" />
+        </Link>
+      </div>
+      <h1 className="mb-4 text-xl md:text-2xl font-semibold">Editar Cliente</h1>
       <NewEditClientForm cliente={cliente} />
     </main>
   );

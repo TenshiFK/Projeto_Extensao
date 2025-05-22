@@ -8,7 +8,7 @@ interface ModalProps {
     onConfirm: () => void;
   }
   
-  export default function Modal({ isOpen, onClose, onConfirm }: ModalProps) {
+  export default function ModalOrcamento({ isOpen, onClose, onConfirm }: ModalProps) {
     return (
       <Dialog open={isOpen} onClose={onClose} className="relative z-10">
         <DialogBackdrop className="fixed inset-0 bg-gray-500/75" />
@@ -18,13 +18,10 @@ interface ModalProps {
             <DialogPanel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-100 sm:max-w-lg">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-8 sm:pb-4">
                 <DialogTitle as="h3" className="sm:text-xl text-lg font-semibold text-main-blue text-center pb-6">
-                  Deseja mesmo excluir esse item?
+                  Exportar Orçamento
                 </DialogTitle>
-                <p className="mt-2 sm:text-base text-sm text-second-black pb-2">
-                  • Ao excluir, todos os dados e informações serão apagados do sistema.
-                </p>
-                <p className="mt-2 sm:text-base text-sm text-second-black pb-4">
-                  • Uma vez excluído a ação não poderá ser desfeita.
+                <p className="mt-2 sm:text-base text-sm text-second-black pb-2 text-center">
+                  Ao confirmar, um arquivo PDF será gerado com os detalhes deste orçamento.
                 </p>
               </div>
               <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:justify-center sm:px-6 sm:pb-6">
@@ -32,7 +29,7 @@ interface ModalProps {
                   onClick={onConfirm}
                   className="cursor-pointer inline-flex w-full justify-center rounded-md bg-main-blue px-6 py-2 text-base font-semibold text-white shadow-sm hover:bg-blue-900 sm:w-auto sm:ml-18"
                 >
-                  Confirmar
+                  Exportar
                 </button>
                 <button
                   onClick={onClose}

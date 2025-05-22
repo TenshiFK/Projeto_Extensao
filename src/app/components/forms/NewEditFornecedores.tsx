@@ -1,25 +1,27 @@
 'use client';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { getDatabase, ref, push, onValue, update,} from 'firebase/database';
-import { useParams, useRouter } from 'next/navigation'; // Importando o useRouter
+import { collection, addDoc, doc, updateDoc, } from 'firebase/firestore';
+import { useParams, useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
+import { db } from '@/app/services/firebase/firebaseconfig'; // Certifique-se de exportar corretamente o Firestore como `db`
 
 interface Fornecedor {
-  id?: number;
-  nomeFornecedor: string,
-  email?: string,
-  telefone: string,
-  endereco?: string,
-  bairro?: string,
-  cidade?: string,
-  cep?: string,
-  numero?: string,
-  complemento?: string,
-  informacoesAdicionais?: string,
+  id?: string;
+  nomeFornecedor: string;
+  email?: string;
+  telefone: string;
+  endereco?: string;
+  bairro?: string;
+  cidade?: string;
+  cep?: string;
+  numero?: string;
+  complemento?: string;
+  informacoesAdicionais?: string;
 }
 
 interface Props {
-  fornecedor?: Fornecedor; // O cliente pode ser opcional (para criação de novos clientes)
+  fornecedor?: Fornecedor;
 }
 
 export default function NewEditFornecedoresForm({ fornecedor }: Props) {
@@ -34,13 +36,12 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
   const [complemento, setComplemento] = useState('');
   const [informacoesAdicionais, setInformacoesAdicionais] = useState('');
 
-  const {id} = useParams(); // Obtendo o id do fornecedor da URL
-  const router = useRouter(); // Usando o hook useRouter para redirecionamento
+  const { id } = useParams();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const database = getDatabase(); // Inicializando o banco de dados
-  
+
     const dados = {
       nomeFornecedor,
       email,
@@ -56,15 +57,16 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
 
     try {
       if (fornecedor && id) {
-        const refPath = ref(database, `DadosFornecedores/${id}`); // Referência ao caminho 'Dados' no Realtime Database
-        await update(refPath, dados); // Adiciona os dados no Realtime Database
-        alert("Fornecedor atualizado com sucesso");
+        const fornecedorRef = doc(db, 'Fornecedores', id as string);
+        await updateDoc(fornecedorRef, dados);
+        toast.success("Fornecedor atualizado com sucesso");
       } else {
-        const refPath = ref(database, 'DadosFornecedores'); // Referência ao caminho 'Dados' no Realtime Database
-        await push(refPath, dados); // Adiciona os dados no Realtime Database
-        alert("Fornecedor cadastrado com sucesso");
+        const fornecedoresRef = collection(db, 'Fornecedores');
+        await addDoc(fornecedoresRef, dados);
+        toast.success("Fornecedor cadastrado com sucesso");
       }
 
+      // Limpa o formulário
       setNomeFornecedor('');
       setEmail('');
       setTelefone('');
@@ -76,17 +78,15 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
       setComplemento('');
       setInformacoesAdicionais('');
 
-      // Redireciona para a tela de /home/... após salvar os dados
       router.push('/home/fornecedores');
-
     } catch (error) {
-      console.error("Erro ao gravar os dados:", error);
+      console.error("Erro ao salvar os dados:", error);
+      toast.error("Erro ao salvar os dados. Tente novamente.");
     }
   };
 
   useEffect(() => {
     if (fornecedor) {
-      // Preenche os campos do formulário com os dados, se fornecido
       setNomeFornecedor(fornecedor.nomeFornecedor);
       setEmail(fornecedor.email || '');
       setTelefone(fornecedor.telefone);
@@ -98,31 +98,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
       setComplemento(fornecedor.complemento || '');
       setInformacoesAdicionais(fornecedor.informacoesAdicionais || '');
     }
-
-    const refDados = ref(getDatabase(), "DadosFornecedores"); // Referência ao caminho 'Dados' no Realtime Database
-
-    onValue(refDados, (snapshot) => {
-      if (snapshot.exists()) {
-        const resultadoDados = Object.entries(snapshot.val()).map(([key, valor]: [string, any]) => ({
-          key,
-          nomeFornecedor: valor.nomeFornecedor,
-          email: valor.email,
-          telefone: valor.telefone,
-          endereco: valor.endereco,
-          bairro: valor.bairro,
-          cidade: valor.cidade,
-          cep: valor.cep,
-          numero: valor.numero,
-          complemento: valor.complemento,
-          informacoesAdicionais: valor.informacoesAdicionais,
-          
-        }));
-        console.log(resultadoDados);
-      } else {
-        console.log("Nenhum dado encontrado.");
-      }
-    });
-  }, [fornecedor]); // Adicionando o 'peoduto' como dependência
+  }, [fornecedor]);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -280,7 +256,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
               </div>
             </div>
 
-            <div className="sm:col-span-6">
+            <div className="col-span-6">
               <label htmlFor="descricao" className="block text-sm/6 font-medium text-gray-900">
                 Descrição
               </label>
@@ -300,18 +276,18 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-6">
-        <Link href="/home/fornecedores">
-          <button type="button" className="text-sm/6 font-semibold text-main-white px-3 py-2 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-            Cancelar
-          </button>
-        </Link>
+      <div className="mt-6 flex items-center justify-end gap-x-10">
         <button
           type="submit"
-          className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          className="text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-md hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           Salvar
         </button>
+        <Link href="/home/fornecedores">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-5 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+            Cancelar
+          </button>
+        </Link>
       </div>
     </form>
   )
