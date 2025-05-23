@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { collection, addDoc, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { toast } from 'react-toastify';
-import { db } from '@/app/services/firebase/firebaseconfig'; // Certifique-se de exportar 'db' corretamente
+import { db } from '@/app/services/firebase/firebaseconfig';
 import Link from 'next/link';
 import { ChevronDownIcon } from '@heroicons/react/16/solid';
+import { IMaskInput } from 'react-imask';
 
 interface Produto {
   id?: string;
@@ -19,6 +20,19 @@ interface Produto {
     nomeFornecedor: string;
   };
   descricao?: string;
+}
+
+interface MovimentacaoEstoque {
+  id?: string;
+  produtoId: string;
+  produtoNome: string;
+  tipo: 'Entrada' | 'Saída';
+  quantidade: number;
+  data: string;
+  origem: string;
+  origemId: string;
+
+  observacoes?: string;
 }
 
 interface Props {
@@ -38,6 +52,17 @@ export default function NewEditProdutoForm({ produto }: Props) {
   const { id } = useParams();
   const router = useRouter();
 
+  const registrarMovimentacaoEstoque = async (movimentacao: MovimentacaoEstoque) => {
+    try {
+      const movimentacoesRef = collection(db, 'DadosEstoque');
+      await addDoc(movimentacoesRef, movimentacao);
+      console.log('Movimentação registrada com sucesso');
+    } catch (error) {
+      console.error('Erro ao registrar movimentação:', error);
+      toast.error('Erro ao registrar movimentação de estoque.');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -56,13 +81,38 @@ export default function NewEditProdutoForm({ produto }: Props) {
         const docRef = doc(db, 'Produtos', id as string);
         await updateDoc(docRef, dados);
         toast.success('Produto atualizado com sucesso!');
+
+        const quantidadeAntiga = parseInt(produto.quantidade);
+        const quantidadeNova = parseInt(quantidade);
+        const diferenca = quantidadeNova - quantidadeAntiga;
+
+        if (diferenca !== 0) {
+          await registrarMovimentacaoEstoque({
+            produtoId: id as string,
+            produtoNome: nomeProduto,
+            quantidade: Math.abs(diferenca),
+            tipo: diferenca > 0 ? 'Entrada' : 'Saída',
+            data: new Date().toISOString(),
+            origem: 'Produtos',
+            origemId: id as string,
+          });
+        }
       } else {
         const collectionRef = collection(db, 'Produtos');
-        await addDoc(collectionRef, dados);
+        const docRef = await addDoc(collectionRef, dados);
         toast.success('Produto cadastrado com sucesso!');
+
+        await registrarMovimentacaoEstoque({
+          produtoId: docRef.id,
+          produtoNome: nomeProduto,
+          quantidade: parseInt(quantidade),
+          tipo: 'Entrada',
+          data: new Date().toISOString(),
+          origem: 'Produtos',
+          origemId: docRef.id,
+        });
       }
 
-      // Reset
       setNomeProduto('');
       setValor('');
       setDataCompra('');
@@ -119,9 +169,11 @@ export default function NewEditProdutoForm({ produto }: Props) {
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="nomeProduto" className="block text-sm/6 font-medium text-gray-900">
                 Nome do Produto
+                <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
                 <input
+                  required
                   id="nomeProduto"
                   name="nomeProduto"
                   type="text"
@@ -135,14 +187,23 @@ export default function NewEditProdutoForm({ produto }: Props) {
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="valor" className="block text-sm/6 font-medium text-gray-900">
                 Valor do Produto
+                <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
-                <input
+                <IMaskInput
+                  mask={Number}
+                  required
                   id="valor"
                   name="valor"
-                  type="text"
+                  scale={2}
+                  thousandsSeparator="."
+                  radix=","
+                  mapToRadix={['.', ',']}
+                  normalizeZeros={true}
+                  padFractionalZeros={true}
+                  placeholder='00,00'
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setValor(e.target.value)}
+                  onAccept={(value) => setValor(value)}
                   value={valor}
                 />
               </div>
@@ -151,9 +212,11 @@ export default function NewEditProdutoForm({ produto }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="dataCompra" className="block text-sm/6 font-medium text-gray-900">
                 Data de Compra
+                <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
                 <input
+                  required
                   id="dataCompra"
                   name="dataCompra"
                   type="date"
@@ -183,9 +246,11 @@ export default function NewEditProdutoForm({ produto }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="quantidade" className="block text-sm/6 font-medium text-gray-900">
                 Quantidade
+                <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
                 <input
+                  required
                   id="quantidade"
                   name="quantidade"
                   type="text"
@@ -251,15 +316,18 @@ export default function NewEditProdutoForm({ produto }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-10">
+      <div className="mt-6 flex items-center justify-end gap-x-12">
         <button
           type="submit"
-          className="text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-md hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2"
+          className={`text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-6 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2
+          ${nomeProduto === '' || valor === '' || dataCompra === '' || quantidade === '' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-900'}  
+          `}
+          disabled={nomeProduto === '' || valor === '' || dataCompra === '' || quantidade === ''}
         >
           Salvar
         </button>
         <Link href="/home/estoque">
-          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-5 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-6 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
             Cancelar
           </button>
         </Link>

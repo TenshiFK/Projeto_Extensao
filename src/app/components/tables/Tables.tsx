@@ -3,32 +3,32 @@ import { ArrowDownTrayIcon, EyeIcon, PencilSquareIcon, TrashIcon } from "@heroic
 import { useRouter } from "next/navigation";
 
 interface TableProps {
-  titlesHead: { name: string }[]; // Agora os títulos são objetos com `name`
+  titlesHead: { name: string }[];
   dataBody: { id: string | number | null; [key: string]: string | number | null }[]; 
   basePath: string;
-  onDelete: (id: string) => void; // Função de exclusão
-  showExport?: boolean; // Adicionado para exportação
-  onExport?: (id: string) => void; // Função de exportação
+  onDelete: (id: string) => void;
+  showExport?: boolean;
+  onExport?: (id: string) => void;
 }
 
 export default function Table({ titlesHead, dataBody, basePath, onDelete, showExport, onExport }: TableProps) {
   const router = useRouter();
 
   const handleView = (id: string) => {
-    router.push(`/home/${basePath}/${id}`); // Redireciona para a URL dinâmica correta
+    router.push(`/home/${basePath}/${id}`);
   };
 
   const handleEdit = (id: string | number | null) => {
-    if (!id) return; // Evita erros caso id seja null
-    router.push(`/home/${basePath}/${String(id)}/edit`); // Converte id para string
+    if (!id) return;
+    router.push(`/home/${basePath}/${String(id)}/edit`);
   };
 
   const handleDelete = (id: string) => {
-    onDelete(id); // Só chama a função que o componente pai vai lidar
+    onDelete(id);
   };
 
   const handleExport = (id: string) => {
-    onExport?.(id); // Chama a função de exportação se fornecida
+    onExport?.(id);
   };
 
   return (
@@ -67,7 +67,7 @@ export default function Table({ titlesHead, dataBody, basePath, onDelete, showEx
                       ${index === 0 ? "" : "hidden lg:table-cell"}
                     `}
                   >
-                    {item[key] ?? "Não informado"}
+                    {item[key] ?? " - "}
                   </td>
                 ))}
               <td className="border-gray-300 px-2 py-2 flex gap-3 justify-center">

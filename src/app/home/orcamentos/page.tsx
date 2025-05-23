@@ -220,16 +220,16 @@ export default function Page() {
                   ],
                 },
                 layout: {
-                  hLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                  hLineWidth: function (i: number, node: any) {
                     return (i === 0 || i === node.table.body.length) ? 2 : 1;
                   },
-                  vLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                  vLineWidth: function (i: number, node: any) {
                     return (i === 0 || i === node.table.widths.length) ? 2 : 1;
                   },
-                  hLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                  hLineColor: function (i: number, node: any) {
                     return (i === 0 || i === node.table.body.length) ? 'black' : 'gray';
                   },
-                  vLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+                  vLineColor: function (i: number, node: any) {
                     return (i === 0 || i === node.table.widths.length) ? 'black' : 'gray';
                   },
                 }      
@@ -288,16 +288,16 @@ export default function Page() {
               ],
             },
             layout: {
-              hLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+              hLineWidth: function (i: number, node: any) {
                 return (i === 0 || i === node.table.body.length) ? 2 : 1;
               },
-              vLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+              vLineWidth: function (i: number, node: any) {
                 return (i === 0 || i === node.table.widths.length) ? 2 : 1;
               },
-              hLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+              hLineColor: function (i: number, node: any) {
                 return (i === 0 || i === node.table.body.length) ? 'black' : 'gray';
               },
-              vLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+              vLineColor: function (i: number, node: any) {
                 return (i === 0 || i === node.table.widths.length) ? 'black' : 'gray';
               },
             }            
@@ -374,9 +374,9 @@ export default function Page() {
 
       const orcamentosData: Orcamentos[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
-        nome: doc.data().cliente.nome || "Sem nome",
-        garantia: doc.data().garantia || "Sem garantia",
-        dataCriacao: doc.data().dataCriacao.split("-").reverse().join("/") || "Não informado",
+        nome: doc.data().cliente.nome || " - ",
+        garantia: doc.data().garantia || " - ",
+        dataCriacao: doc.data().dataCriacao.split("-").reverse().join("/") || " - ",
         valor: doc.data().valorTotal,
       }));
 
@@ -391,8 +391,10 @@ export default function Page() {
       const orcamentoRef = doc(firestore, `Orcamentos/${id}`);
       await deleteDoc(orcamentoRef);
       setOrcamento((prevOrcamentos) => prevOrcamentos.filter((orcamento) => orcamento.id !== id));
+      toast.success("Orçamento excluído com sucesso!");
     } catch (error) {
       console.error("Erro ao excluir Orçamento:", error);
+      toast.error("Erro ao excluir Orçamento. Tente novamente.");
     }
   };
 

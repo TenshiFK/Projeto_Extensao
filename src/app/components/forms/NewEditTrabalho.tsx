@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { collection, doc, addDoc, updateDoc, getDocs } from 'firebase/firestore';
-import { db } from '@/app/services/firebase/firebaseconfig'; // ajuste para seu caminho real
+import { db } from '@/app/services/firebase/firebaseconfig';
+import { IMaskInput } from 'react-imask';
 
 interface Trabalho {
   id?: string;
@@ -28,19 +29,6 @@ interface Props {
   trabalho?: Trabalho;
 }
 
-// historico de movimentos
-interface MovimentacaoEstoque {
-  id?: string;
-  produtoId: string;
-  produtoNome: string;
-  tipo: 'entrada' | 'saida';
-  quantidade: number;
-  data: string;
-  origem: string; // 'trabalho', 'compra', 'ajuste', etc.
-  origemId: string; // ID do documento que originou a movimentação
-
-  observacoes?: string;
-}
 
 export default function NewEditTrabalhoForm({ trabalho }: Props) {
   const [cliente, setCliente] = useState({ id: '', nome: '' });
@@ -66,36 +54,22 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
   const { id } = useParams();
   const router = useRouter();
 
-  //movimentação de produtos.
-  const registrarMovimentacaoEstoque = async (
-  produtoId: string,
-  produtoNome: string,
-  quantidade: number,
-  tipo: 'entrada' | 'saida',
-  origem: string,
-  origemId: string
-) => {
-  try {
-    const movimentacao = {
-      produtoId,
-      produtoNome,
-      quantidade,
-      tipo,
-      data: new Date().toISOString(),
-      origem,
-      origemId,
-    };
-
-    const movimentacoesRef = collection(db, 'DadosEstoque'); //cria um db especifico para historico.
-    await addDoc(movimentacoesRef, movimentacao);
-    
-    console.log('Movimentação registrada com sucesso');
-  } catch (error) {
-    console.error('Erro ao registrar movimentação:', error);
-    toast.error('Erro ao registrar movimentação de estoque.');
-  }
-};
-
+  const ifFormEmpty =
+  cliente.nome.trim() === '' &&
+  orcamento.titulo.trim() === '' &&
+  descricao.trim() === '' &&
+  solucao.trim() === '' &&
+  dataCriacao.trim() === '' &&
+  garantia.trim() === '' &&
+  statusOrdem.trim() === '' &&
+  produtos.trim() === '' &&
+  quantidadeProdutos.trim() === '' &&
+  outros.trim() === '' &&
+  valorFrete.trim() === '' &&
+  valorTotal.trim() === '' &&
+  pagamento.trim() === '' &&
+  statusPagamento.trim() === ''
+  ;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,35 +91,16 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
     };
 
     try {
-      let trabalhoId; //cria uma variavel pra guardar o id do trabalho, e associar-la ao estoque
-      
       if (trabalho && id) {
       const trabalhoRef = doc(db, 'Trabalhos', id as string);
       await updateDoc(trabalhoRef, dados);
-      trabalhoId = id;
       toast.success('Trabalho atualizado com sucesso!');
     } else {
       const trabalhosRef = collection(db, 'Trabalhos');
-      const docRef = await addDoc(trabalhosRef, dados);
-      trabalhoId = docRef.id;
+      await addDoc(trabalhosRef, dados);
       toast.success('Trabalho cadastrado com sucesso!');
     }
 
-      for (const item of listaProdutos) {
-      const produto = produtosDisponiveis.find(p => p.nomeProduto === item.produto);
-      if (produto) {
-        await registrarMovimentacaoEstoque(
-          produto.id,
-          item.produto,
-          parseInt(item.quantidade),
-          'saida',
-          'trabalho',
-          trabalhoId as string
-        );
-      }
-    }
-
-      // Limpar campos
       setCliente({ id: '', nome: '' });
       setOrcamento({ id: '', titulo: '' });
       setDescricao('');
@@ -162,7 +117,6 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
       setStatusPagamento('');
       setListaProdutos([]);
 
-      // Redireciona para a tela de /home/clientes após salvar os dados
       router.push('/home/trabalhos');
     } catch (error) {
       console.error('Erro ao salvar os dados:', error);
@@ -220,11 +174,10 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
 
     fetchOrcamentos();
   }, []);
-  //UseEffect para preencher os campos do formulário com os dados do Trabalho
 
   useEffect(() => {
     if (trabalho) {
-      // Preenche os campos do formulário com os dados do cliente, se fornecidp
+  
       setCliente(trabalho.cliente);
       setOrcamento(trabalho.orcamento || { id: '', titulo: '' });
       setDescricao(trabalho.descricao);
@@ -343,9 +296,11 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="dataCriacao" className="block text-sm/6 font-medium text-gray-900">
                 Data de Criação
+                <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
                 <input
+                  required
                   id="dataCriacao"
                   name="dataCriacao"
                   type="date"
@@ -513,7 +468,6 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                   id="ouros"
                   name="ouros"
                   type="text"
-                  autoComplete="postal-code"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   onChange={(e) => setOutros(e.target.value)}
                   value={outros}
@@ -526,13 +480,19 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                 Valor do Frete
               </label>
               <div className="mt-2">
-                <input
+                <IMaskInput
                   id="valorFrete"
                   name="valorFrete"
-                  type="text"
-                  autoComplete="postal-code"
+                  mask={Number} 
+                  scale={2}
+                  thousandsSeparator="."
+                  radix=","
+                  mapToRadix={['.', ',']}
+                  normalizeZeros={true}
+                  padFractionalZeros={true}
+                  placeholder='00,00'
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setValorFrete(e.target.value)}
+                  onAccept={(value) => setValorFrete(value)}
                   value={valorFrete}
                 />
               </div>
@@ -541,15 +501,23 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="valorTotal" className="block text-sm/6 font-medium text-gray-900">
                 Valor Total
+                <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
-                <input
+                <IMaskInput
+                  required
+                  mask={Number}
                   id="valorTotal"
                   name="valorTotal"
-                  type="text"
-                  autoComplete="postal-code"
+                  scale={2}
+                  thousandsSeparator="."
+                  radix=","
+                  mapToRadix={['.', ',']}
+                  normalizeZeros={true}
+                  padFractionalZeros={true}
+                  placeholder='00,00'
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setValorTotal(e.target.value)}
+                  onAccept={(value) => setValorTotal(value)}
                   value={valorTotal}
                 />
               </div>
@@ -609,15 +577,17 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-10">
+      <div className="mt-6 flex items-center justify-end gap-x-12">
         <button
           type="submit"
-          className="text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-md hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2"
+          disabled={ifFormEmpty}
+          className={`text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-6 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2
+          ${ifFormEmpty ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-900 cursor-pointer'}`}
         >
           Salvar
         </button>
         <Link href="/home/trabalhos">
-          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-5 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-6 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
             Cancelar
           </button>
         </Link>

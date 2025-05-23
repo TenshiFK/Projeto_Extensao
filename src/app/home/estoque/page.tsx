@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { collection, getDocs, query, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, deleteDoc, doc, addDoc, orderBy } from "firebase/firestore";
 import { db, firestore } from "@/app/services/firebase/firebaseconfig";
 import Tables from "@/app/components/tables/Tables";
 import Search from "@/app/components/forms/Search";
@@ -24,6 +24,18 @@ interface Produto {
   [key: string]: string | number | null;
 }
 
+interface MovimentacaoEstoque {
+  id?: string;
+  produtoId: string;
+  produtoNome: string;
+  tipo: 'Entrada' | 'Saída' | 'Exclusão';
+  quantidade: number;
+  data: string;
+  origem: string;
+
+  observacoes?: string;
+}
+
 export default function Page() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const router = useRouter();
@@ -35,6 +47,19 @@ export default function Page() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalPDFOpen, setModalPDFOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
+  const registrarMovimentacaoEstoque = async (movimentacao: MovimentacaoEstoque) => {
+    try {
+      console.log("Movimentação que vai ser salva:", movimentacao);
+      const movimentacoesRef = collection(db, 'DadosEstoque');
+      await addDoc(movimentacoesRef, movimentacao);
+      console.log('Movimentação registrada com sucesso');
+    } catch (error) {
+      console.error('Erro ao registrar movimentação:', error);
+      toast.error('Erro ao registrar movimentação de estoque.');
+    }
+  };
+
 
   const openModal = (id: string) => {
     setItemToDelete(id);
@@ -65,120 +90,268 @@ export default function Page() {
     (pdfMake as any).vfs = (pdfFonts as any).vfs;
   }, []);
 
-  const exportarPDF = async () => {
+  const exportarPDF = async (tipoRelatorio?: string, periodo?: string) => {
     try{
-      const produtosData: Produto[] =[];
 
-      const produtosRef = collection(firestore, "Produtos");
-      const snapshot = await getDocs(produtosRef)
+      let docDefinition;
 
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const produto: Produto = {
-          id: doc.id,
-          nomeProduto: data.nomeProduto || "Não informado",
-          valor: data.valor || "Não informado",
-          quantidade: data.quantidade || "Não informado",
-          nomeFornecedor: data.fornecedor.nomeFornecedor,
-          dataCompra: data.dataCompra
-          ? data.dataCompra.split("-").reverse().join("/")
-          : "Não informado",
-        };
-        produtosData.push(produto)
-      });
+      if(tipoRelatorio === "periodo"){
+        console.log("Tipo de relatório:", tipoRelatorio);
+        console.log("Período:", periodo);
+        const produtosData: Produto[] =[];
+  
+        const produtosRef = collection(firestore, "Produtos");
+        const q = query(produtosRef, orderBy("dataCompra", "desc"));
+        const snapshot = await getDocs(q);
+  
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const produto: Produto = {
+            id: doc.id,
+            nomeProduto: data.nomeProduto || "Não informado",
+            valor: data.valor || "Não informado",
+            quantidade: data.quantidade || "Não informado",
+            nomeFornecedor: data.fornecedor?.nomeFornecedor || "Não informado",
+            dataCompra: data.dataCompra
+            ? data.dataCompra.split("-").reverse().join("/")
+            : "Não informado",
+          };
 
-      if (produtosData.length === 0) {
-        toast.info("Nenhum produto encontrado")
+          const hoje = new Date();
+          const dataCompraDate = new Date(data.dataCompra);
+
+          console.log("Hoje:", hoje);
+
+          if (periodo === "umMes") {
+            const umMesAtras = new Date();
+            umMesAtras.setMonth(hoje.getMonth() - 1);
+            if (dataCompraDate >= umMesAtras) {
+              produtosData.push(produto);
+            }
+          } else if (periodo === "seisMeses") {
+            const seisMesesAtras = new Date();
+            seisMesesAtras.setMonth(hoje.getMonth() - 6);
+            if (dataCompraDate >= seisMesesAtras) {
+              produtosData.push(produto);
+            }
+          } else if (periodo === "ano") {
+            const umAnoAtras = new Date();
+            umAnoAtras.setFullYear(hoje.getFullYear() - 1);
+            if (dataCompraDate >= umAnoAtras) {
+              produtosData.push(produto);
+            }
+          } else if (periodo === "todos"){
+            produtosData.push(produto)
+          }
+        });
+        
+        if (produtosData.length === 0) {
+          toast.info("Nenhum produto encontrado")
+          return;
+        }
+  
+        docDefinition = {
+          info: {
+            title: "Relatório de Produtos"
+          },
+                content: [
+                  {
+                    image: logoBase64,
+                    width: 70,
+                    height: 70,
+                    margin: [0, 0, 0, 10],
+                  },
+                  { text: "Relatório de Produtos no Estoque", style: "header" },
+                  {
+                    table: {
+                      widths: ['*','*','*',"*","*"],
+                      body: [
+                        [
+                          {text:'Produto',
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                          }, 
+                          {text:'Valor',
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                          },
+                          {text:'Quantidade',
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                          },
+                          {text:'Fornecedor',
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                          },
+                          {text:'Data de Compra',
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                          },],
+                        ...produtosData.map((produto) => [
+                          produto.nomeProduto || ' - ',
+                          `R$ ${parseFloat(produto.valor).toFixed(2)}` || ' - ',
+                          produto.quantidade || ' - ',
+                          produto.nomeFornecedor || ' - ',
+                          produto.dataCompra || ' - ',
+                        ]),
+                      ]
+                    },
+                    layout: {
+                      hLineWidth: function (i: number, node: any) {
+                      return (i === 0 || i === node.table.body.length) ? 2 : 1;
+                      },
+                      vLineWidth: function (i: number, node: any) {
+                      return (i === 0 || i === node.table.widths.length) ? 2 : 1;
+                      },
+                      hLineColor: function (i: number, node: any) {
+                      return (i === 0 || i === node.table.body.length) ? 'gray' : 'gray';
+                      },
+                      vLineColor: function (i: number, node: any) {
+                      return (i === 0 || i === node.table.widths.length) ? 'gray' : 'gray';
+                      },
+                    }
+                  },
+                ],
+                styles: {
+                  header: {
+                    fontSize: 20,
+                    bold: true,
+                    alignment: "center",
+                    color: "#002840",
+                    margin: [0, 0, 0, 45]
+                  },
+                  subheader: {
+                    fontSize: 14,
+                    bold: true,
+                  },
+          
+                },
+        }
+
+      } else if (tipoRelatorio === "historico") {
+        const historicoData: MovimentacaoEstoque[] = [];
+
+        const movimentacoesRef = collection(firestore, "DadosEstoque");
+        const q = query(movimentacoesRef, orderBy("data", "desc")); 
+        const snapshot = await getDocs(q);
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const movimentacao: MovimentacaoEstoque = {
+            id: doc.id,
+            produtoId: data.produtoId || "Não informado",
+            produtoNome: data.produtoNome || "Não informado",
+            tipo: data.tipo || "Não informado",
+            quantidade: data.quantidade || 0,
+            data: data.data 
+              ? data.data.split("T")[0].split("-").reverse().join("/")
+              : "Não informado",
+            origem: data.origem || "Não informado",
+          };
+          historicoData.push(movimentacao);
+        });
+
+        if (historicoData.length === 0) {
+          toast.info("Nenhum produto encontrado")
+          return;
+        }
+
+        docDefinition = {
+          info: {
+            title: "Relatório de Histórico de Movimentações"
+          },
+                content: [
+                  {
+                    image: logoBase64,
+                    width: 70,
+                    height: 70,
+                    margin: [0, 0, 0, 10],
+                  },
+                  { text: "Relatório de Histórico de Movimentações", style: "header" },
+                  {
+                    table: {
+                      widths: ['*','*','*',"*"],
+                      body: [
+                        [
+                          {text:'Produto',
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                          }, 
+                          {text:'Tipo de Movimentação',
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                          },
+                          {text:'Quantidade',
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                          },
+                          {text:'Data de Movimentação',
+                            fillColor: "#f2f2f2",
+                            color: "#333333",
+                            bold: true,
+                            alignment: "center",
+                          },],
+                        ...historicoData.map((produto) => [
+                          produto.produtoNome || ' - ',
+                          produto.tipo || ' - ',
+                          produto.quantidade !== undefined ? produto.quantidade : ' - ',
+                          produto.data || ' - ',
+                        ]),
+                      ]
+                    },
+                    layout: {
+                      hLineWidth: function (i: number, node: any) {
+                      return (i === 0 || i === node.table.body.length) ? 2 : 1;
+                      },
+                      vLineWidth: function (i: number, node: any) {
+                      return (i === 0 || i === node.table.widths.length) ? 2 : 1;
+                      },
+                      hLineColor: function (i: number, node: any) {
+                      return (i === 0 || i === node.table.body.length) ? 'gray' : 'gray';
+                      },
+                      vLineColor: function (i: number, node: any) {
+                      return (i === 0 || i === node.table.widths.length) ? 'gray' : 'gray';
+                      },
+                    }
+                  },
+                ],
+                styles: {
+                  header: {
+                    fontSize: 20,
+                    bold: true,
+                    alignment: "center",
+                    color: "#002840",
+                    margin: [0, 0, 0, 45]
+                  },
+                  subheader: {
+                    fontSize: 14,
+                    bold: true,
+                  },
+          
+                },
+        }
+
+      } else {
+        toast.error("Tipo de relatório inválido");
         return;
       }
 
-      const docDefinition = {
-        info: {
-          title: "Relatório de Produtos"
-        },
-              content: [
-                {
-                  image: logoBase64,
-                  width: 70,
-                  height: 70,
-                  margin: [0, 0, 0, 10],
-                },
-                { text: "Relatório de Produtos no Estoque", style: "header" },
-                {
-                  table: {
-                    widths: ['*','*','*',"*","*"],
-                    body: [
-                      [
-                        {text:'Produto',
-                          fillColor: "#f2f2f2",
-                          color: "#333333",
-                          bold: true,
-                          alignment: "center",
-                        }, 
-                        {text:'Valor',
-                          fillColor: "#f2f2f2",
-                          color: "#333333",
-                          bold: true,
-                          alignment: "center",
-                        },
-                        {text:'Quantidade',
-                          fillColor: "#f2f2f2",
-                          color: "#333333",
-                          bold: true,
-                          alignment: "center",
-                        },
-                        {text:'Fornecedor',
-                          fillColor: "#f2f2f2",
-                          color: "#333333",
-                          bold: true,
-                          alignment: "center",
-                        },
-                        {text:'Data de Compra',
-                          fillColor: "#f2f2f2",
-                          color: "#333333",
-                          bold: true,
-                          alignment: "center",
-                        },],
-                      ...produtosData.map((produto) => [
-                        produto.nomeProduto || ' - ',
-                        `R$ ${parseFloat(produto.valor).toFixed(2)}` || ' - ',
-                        produto.quantidade || ' - ',
-                        produto.nomeFornecedor || ' - ',
-                        produto.dataCompra || ' - ',
-                      ]),
-                    ]
-                  },
-                  layout: {
-                    hLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
-                    return (i === 0 || i === node.table.body.length) ? 2 : 1;
-                    },
-                    vLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
-                    return (i === 0 || i === node.table.widths.length) ? 2 : 1;
-                    },
-                    hLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
-                    return (i === 0 || i === node.table.body.length) ? 'gray' : 'gray';
-                    },
-                    vLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
-                    return (i === 0 || i === node.table.widths.length) ? 'gray' : 'gray';
-                    },
-                  }
-                },
-              ],
-              styles: {
-                header: {
-                  fontSize: 20,
-                  bold: true,
-                  alignment: "center",
-                  color: "#002840",
-                  margin: [0, 0, 0, 45]
-                },
-                subheader: {
-                  fontSize: 14,
-                  bold: true,
-                },
-        
-              },
-      }
 
       pdfMake.createPdf(docDefinition).open();
 
@@ -214,7 +387,7 @@ export default function Page() {
             quantidade: data.quantidade ?? "",
             dataCompra:
               data.dataCompra && data.dataCompra !== "Não informado"
-                ? new Date(data.dataCompra).toLocaleDateString("pt-BR")
+                ? data.dataCompra.split("-").reverse().join("/")
                 : "Não informado",
           };
         });
@@ -230,14 +403,27 @@ export default function Page() {
 
   const handleDelete = async (id: string) => {
     try {
-      const produtoRef = doc(db, "Produtos", id);
-      await deleteDoc(produtoRef);
-      setProdutos((prevProdutos) =>
-        prevProdutos.filter((produto) => produto.id !== id)
-      );
-    } catch (error) {
-      console.error("Erro ao excluir Produto:", error);
-    }
+        const produto = produtos.find((p) => p.id === id);
+        const produtoRef = doc(db, "Produtos", id);
+        await deleteDoc(produtoRef);
+        setProdutos((prevProdutos) => prevProdutos.filter((produto) => produto.id !== id));
+
+        // Registra a movimentação
+        if (produto) {
+          await registrarMovimentacaoEstoque({
+            produtoId: produto.id, 
+            produtoNome: produto.nomeProduto, 
+            quantidade: parseInt(produto.quantidade),
+            tipo: 'Exclusão',
+            data: new Date().toISOString(),
+            origem:'Produtos',
+        });
+        }
+        toast.success("Produto excluído com sucesso!");
+      } catch (error) {
+        console.error("Erro ao excluir Produto:", error);
+        toast.error("Erro ao excluir produto.");
+      }
   };
 
   const updateSearchParams = (key: string, value: string) => {

@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onConfirm: (clienteId?: string) => void;
+    onConfirm: (clienteId?: string, periodoRelatorio?: string) => void;
     isTrabalhos?: boolean;
     clientes?: { idCliente: string; nome: string }[];
     isEstoque?: boolean;
@@ -16,10 +16,13 @@ interface ModalProps {
   export default function ModalPDF({ isOpen, onClose, onConfirm, isTrabalhos, clientes, isEstoque }: ModalProps) {
     const [cliente, setCliente] = useState({ idCliente: '', nome: '' });
     const [periodo, setPeriodo] = useState('');
+    const [tipoRelatorio, setTipoRelatorio] = useState('');
 
     useEffect(() => {
       if (isOpen) {
         setCliente({ idCliente: '', nome: '' });
+        setTipoRelatorio('');
+        setPeriodo('');
       }
     }, [isOpen]);
 
@@ -67,46 +70,74 @@ interface ModalProps {
                 )}
                 {isEstoque && (
                   <div>
-                    <form className='flex flex-wrap'>
-                      <div className='flex w-full gap-4'>
+                    <p className="mt-2 sm:text-base text-sm text-second-black pb-2 text-justify">
+                      Selecione o tipo de relatório que deseja gerar:
+                    </p>
+                    <form>
+                      <div className='flex flex-col w-full'>
                         <div>
-                          <input type="radio" name="umMes" id="umMes" 
-                            onChange={(e) => {setPeriodo(e.target.value)}}
-                            value="umMes"
-                            checked={periodo === "umMes"}/>
-                          <label htmlFor="umMes" className='px-2'>Último Mês</label>
+                          <input type="radio" name="periodo" id="periodo" 
+                            onChange={(e) => {setTipoRelatorio(e.target.value)}}
+                            value="periodo"
+                            checked={tipoRelatorio === "periodo"}/>
+                          <label htmlFor="periodo" className='px-2 text-justify'>Produtos por Período</label>
                         </div>
                         <div>
-                          <input type="radio" name="seisMeses" id="seisMeses"
-                            value="seisMeses"
-                            checked={periodo === "seisMeses"} 
-                            onChange={(e) => {setPeriodo(e.target.value)}}/>
-                          <label htmlFor="seisMeses" className='px-2'>Últimos 6 Meses</label>
-                        </div>
-                      </div>
-                      <div className='flex w-full gap-4'>
-                        <div>
-                          <input type="radio" name="ano" id="ano" 
-                            value="ano"
-                            checked={periodo === "ano"} 
-                            onChange={(e) => {setPeriodo(e.target.value)}}/>
-                          <label htmlFor="ano" className='px-2'>Último Ano</label>
-                        </div>
-                        <div>
-                          <input type="radio" name="todos" id="todos" 
-                            value="todos"
-                            checked={periodo === "todos"} 
-                            onChange={(e) => {setPeriodo(e.target.value)}}/>
-                          <label htmlFor="tresMeses" className='px-2'>Todos os períodos</label>
+                          <input type="radio" name="historico" id="historico"
+                            value="historico"
+                            checked={tipoRelatorio === "historico"} 
+                            onChange={(e) => {setTipoRelatorio(e.target.value)}}/>
+                          <label htmlFor="historico" className='px-2 text-justify'>Histórico de Movimentações</label>
                         </div>
                       </div>
                     </form>
+                    {tipoRelatorio === "periodo" && (
+                      <div>
+                        <p className="mt-2 sm:text-base text-sm text-second-black pb-2 text-justify">
+                          Selecione o período para gerar o relatório:
+                        </p>
+                        <form className='flex flex-wrap'>
+                          <div className='flex w-full gap-4'>
+                            <div>
+                              <input type="radio" name="umMes" id="umMes" 
+                                onChange={(e) => {setPeriodo(e.target.value)}}
+                                value="umMes"
+                                checked={periodo === "umMes"}/>
+                              <label htmlFor="umMes" className='px-2'>Último Mês</label>
+                            </div>
+                            <div>
+                              <input type="radio" name="seisMeses" id="seisMeses"
+                                value="seisMeses"
+                                checked={periodo === "seisMeses"} 
+                                onChange={(e) => {setPeriodo(e.target.value)}}/>
+                              <label htmlFor="seisMeses" className='px-2'>Últimos 6 Meses</label>
+                            </div>
+                          </div>
+                          <div className='flex w-full gap-4'>
+                            <div>
+                              <input type="radio" name="ano" id="ano" 
+                                value="ano"
+                                checked={periodo === "ano"} 
+                                onChange={(e) => {setPeriodo(e.target.value)}}/>
+                              <label htmlFor="ano" className='px-2'>Último Ano</label>
+                            </div>
+                            <div>
+                              <input type="radio" name="todos" id="todos" 
+                                value="todos"
+                                checked={periodo === "todos"} 
+                                onChange={(e) => {setPeriodo(e.target.value)}}/>
+                              <label htmlFor="tresMeses" className='px-2'>Todos os períodos</label>
+                            </div>
+                          </div>
+                        </form>
+                      </div>           
+                    )}
                   </div>
                 )}
               </div>
               <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:justify-center sm:px-6 sm:pb-6">
                 <button
-                  onClick={() => onConfirm(cliente.idCliente || undefined)}
+                  onClick={() => onConfirm(cliente.idCliente || tipoRelatorio || undefined, periodo || undefined)}
                   className="cursor-pointer inline-flex w-full justify-center rounded-md bg-main-blue px-6 py-2 text-base font-semibold text-white shadow-sm hover:bg-blue-900 sm:w-auto sm:ml-18"
                 >
                   Exportar

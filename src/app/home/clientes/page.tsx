@@ -10,6 +10,7 @@ import Link from "next/link";
 import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
 import { firestore } from "../../services/firebase/firebaseconfig";
 import { paginate } from "@/app/lib/utils";
+import { toast } from "react-toastify";
 
 interface Cliente {
   id: string;
@@ -60,10 +61,10 @@ export default function Page() {
     const unsubscribe = onSnapshot(collection(firestore, "Clientes"), (snapshot) => {
       const clientesData: Cliente[] = snapshot.docs.map(doc => ({
         id: doc.id,
-        nome: doc.data().nome || "Não informado",
-        telefone: doc.data().telefone || "Não informado",
-        email: doc.data().email || "Não informado",
-        tipoCliente: doc.data().tipoCliente || "Não informado",
+        nome: doc.data().nome || " - ",
+        telefone: doc.data().telefone || " - ",
+        email: doc.data().email || " - ",
+        tipoCliente: doc.data().tipoCliente || " - ",
       }));
       setClientes(clientesData);
     });
@@ -75,8 +76,10 @@ export default function Page() {
     try {
       await deleteDoc(doc(firestore, "Clientes", id));
       setClientes(prevClientes => prevClientes.filter(cliente => cliente.id !== id));
+      toast.success("Cliente excluído com sucesso!");
     } catch (error) {
       console.error("Erro ao excluir cliente:", error);
+      toast.error("Erro ao excluir cliente. Tente novamente.");
     }
   };
 

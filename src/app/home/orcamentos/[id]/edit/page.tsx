@@ -7,6 +7,7 @@ import { firestore } from "../../../../services/firebase/firebaseconfig";
 import NewEditOrcamentoForm from "@/app/components/forms/NewEditOrcamento";
 import Link from "next/link";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
+import { toast } from "react-toastify";
 
 interface Orcamento {
   titulo: string;
@@ -44,11 +45,9 @@ export default function Page() {
   const { id } = useParams();
   const [orcamento, setOrcamento] = useState<Orcamento>(DEFAULT_ORCAMENTO);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
-      setError("ID do orçamento não fornecido");
       setLoading(false);
       return;
     }
@@ -66,11 +65,11 @@ export default function Page() {
             valorTotal: data.valorTotal || '0',
           });
         } else {
-          setError("Orçamento não encontrado");
+          console.log("Orçamento não encontrado");
         }
       } catch (error) {
         console.error("Erro ao buscar os dados:", error);
-        setError("Erro ao carregar orçamento");
+        toast.error("Erro ao buscar os dados do orçamento.");
       } finally {
         setLoading(false);
       }
@@ -80,12 +79,25 @@ export default function Page() {
   }, [id]);
 
   if (loading) {
-    return <div className="p-4">Carregando...</div>;
+    return <div className="flex justify-center items-center h-screen">
+      <p className="mr-4 text-lg">
+        Carregando...         
+      </p>
+      <svg className="animate-spin h-15 w-15 text-main-blue" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+    </div>;
   }
 
-  if (error) {
-    return <div className="p-4 text-red-500">{error}</div>;
-  }
+  if (!orcamento) return <div>
+      <div className="mb-4">
+          <Link href="/home/orcamentos">
+            <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer"/>
+          </Link>
+        </div>
+      Orçamento não encontrado.
+  </div>;
 
   return (
     <main className="p-4">

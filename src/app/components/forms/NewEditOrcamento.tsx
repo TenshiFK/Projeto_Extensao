@@ -7,22 +7,17 @@ import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 
 import { db } from '@/app/services/firebase/firebaseconfig';
+import { IMaskInput } from 'react-imask';
 
 interface Orcamento {
   id?: string;
   titulo: string;
-  cliente: {
-    id: string;
-    nome: string;
-  };
+  cliente: {id: string; nome: string;};
   dataCriacao: string;
   garantia: string;
   descricao: string;
   solucao: string;
-  produtos?: {
-    produto: string;
-    quantidade: string;
-  }[];
+  produtos?: {produto: string; quantidade: string;}[];
   outros?: string;
   valorFrete?: string;
   valorTotal: string;
@@ -52,6 +47,20 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
   const { id } = useParams();
   const router = useRouter();
 
+  const ifFormEmpty =
+  titulo.trim() === '' &&
+  cliente.nome.trim() === '' &&
+  descricao.trim() === '' &&
+  solucao.trim() === '' &&
+  dataCriacao.trim() === '' &&
+  garantia.trim() === '' &&
+  produtos.trim() === '' &&
+  quantidadeProdutos.trim() === '' &&
+  outros.trim() === '' &&
+  valorFrete.trim() === '' &&
+  valorTotal.trim() === ''
+  ;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -73,13 +82,14 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
         const orcamentoRef = doc(db, 'Orcamentos', id as string);
         await updateDoc(orcamentoRef, dados);
         toast.success('Orçamento atualizado com sucesso!');
+        router.push(`/home/orcamentos/${id}`);
       } else {
         const orcamentosRef = collection(db, 'Orcamentos');
-        await addDoc(orcamentosRef, dados);
+        const docRef = await addDoc(orcamentosRef, dados);
         toast.success('Orçamento cadastrado com sucesso!');
+        router.push(`/home/orcamentos/${docRef.id}`);
       }
 
-      // Limpar campos
       setTitulo('');
       setCliente({ id: '', nome: '' });
       setDescricao('');
@@ -93,7 +103,6 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
       setValorTotal('');
       setListaProdutos([]);
 
-      router.push('/home/orcamentos');
     } catch (error) {
       console.error('Erro ao salvar os dados:', error);
       toast.error('Erro ao salvar os dados. Tente novamente.');
@@ -160,9 +169,11 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="titulo" className="block text-sm/6 font-medium text-gray-900">
                 Título
+                <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
                 <input
+                  required
                   id="titulo"
                   name="titulo"
                   type="text"
@@ -207,9 +218,11 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="dataCriacao" className="block text-sm/6 font-medium text-gray-900">
                 Data de Criação
+                <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
                 <input
+                  required
                   id="dataCriacao"
                   name="dataCriacao"
                   type="date"
@@ -387,7 +400,6 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
                   id="complemento"
                   name="complemento"
                   type="text"
-                  autoComplete="postal-code"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   onChange={(e) => setOutros(e.target.value)}
                   value={outros}
@@ -400,13 +412,19 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
                 Valor do Frete
               </label>
               <div className="mt-2">
-                <input
-                  id="complemento"
-                  name="complemento"
-                  type="text"
-                  autoComplete="postal-code"
+                <IMaskInput
+                  id="valorFrete"
+                  name="valorFrete"
+                  mask={Number} 
+                  scale={2}
+                  thousandsSeparator="."
+                  radix=","
+                  mapToRadix={['.', ',']}
+                  normalizeZeros={true}
+                  padFractionalZeros={true}
+                  placeholder='00,00'
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setValorFrete(e.target.value)}
+                  onAccept={(value) => setValorFrete(value)}
                   value={valorFrete}
                 />
               </div>
@@ -415,15 +433,23 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="complemento" className="block text-sm/6 font-medium text-gray-900">
                 Valor Total
+              <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
-                <input
-                  id="complemento"
-                  name="complemento"
-                  type="text"
-                  autoComplete="postal-code"
+                <IMaskInput
+                  required
+                  mask={Number}
+                  id="valorTotal"
+                  name="valorTotal"
+                  scale={2}
+                  thousandsSeparator="."
+                  radix=","
+                  mapToRadix={['.', ',']}
+                  normalizeZeros={true}
+                  padFractionalZeros={true}
+                  placeholder='00,00'
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setValorTotal(e.target.value)}
+                  onAccept={(value) => setValorTotal(value)}
                   value={valorTotal}
                 />
               </div>
@@ -443,15 +469,17 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-10">
+      <div className="mt-6 flex items-center justify-end gap-x-12">
         <button
           type="submit"
-          className="text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-md hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2"
+          disabled={ifFormEmpty}
+          className={`text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-6 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2
+          ${ifFormEmpty ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-900 cursor-pointer'}`}
         >
           Salvar
         </button>
-        <Link href="/home/orcamentos">
-          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-5 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+        <Link href="/home/trabalhos">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-6 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
             Cancelar
           </button>
         </Link>

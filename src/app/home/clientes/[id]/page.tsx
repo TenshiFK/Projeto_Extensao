@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { db } from '../../../services/firebase/firebaseconfig';
+import { db, firestore } from '../../../services/firebase/firebaseconfig';
 import Link from 'next/link';
 import Tables from '@/app/components/tables/Tables';
-import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, onSnapshot, deleteDoc } from 'firebase/firestore';
 import Pagination from '@/app/components/Pagination';
 import { paginate } from '@/app/lib/utils';
 import Modal from '@/app/components/modal/modal';
 import { ArrowLeftCircleIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { toast } from 'react-toastify';
 
 interface Cliente {
   nome: string;
@@ -86,6 +87,7 @@ export default function ClienteDetalhes() {
         }
       } catch (error) {
         console.error("Erro ao buscar cliente:", error);
+        toast.error("Erro ao buscar cliente");
       } finally {
         setLoading(false);
       }
@@ -124,8 +126,17 @@ export default function ClienteDetalhes() {
   }, [id]);
 
   const handleDelete = async (id: string) => {
-    // Aqui no futuro você pode usar deleteDoc(doc(db, "DadosTrabalhos", id));
-    console.log('Deletar trabalho com id:', id);
+        try {
+      const trabalhoRef = doc(firestore, "Trabalhos", id);
+      await deleteDoc(trabalhoRef);
+      setTrabalhos((prevTrabalhos) =>
+        prevTrabalhos.filter((trabalho) => trabalho.id !== id)
+      );
+      toast.success("Trabalho excluído com sucesso!");
+    } catch (error) {
+      console.error("Erro ao excluir Trabalho:", error);
+      toast.error("Erro ao excluir Trabalho. Tente novamente.");
+    }
   };
 
   const currentPage = parseInt(searchParams.get('page') || '1');
@@ -133,9 +144,28 @@ export default function ClienteDetalhes() {
   const paginatedTrabalhos = paginate(trabalhos, currentPage, perPage);
   const totalPages = Math.ceil(trabalhos.length / perPage);
 
-  if (loading) return <p>Carregando...</p>;
+    if (loading) {
+    return <div className="flex justify-center items-center h-screen">
+      <p className="mr-4 text-lg">
+        Carregando...         
+      </p>
+      <svg className="animate-spin h-15 w-15 text-main-blue" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+    </div>;
+  }
 
-  if (!cliente) return <p>Cliente não encontrado.</p>;
+  if (!cliente) {
+    return <div>
+      <div className="mb-4">
+        <Link href="/home/clientes">
+          <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer" />
+        </Link>
+      </div>
+      Cliente não encontrado.
+      </div>;
+  }
 
   return (
     <main>

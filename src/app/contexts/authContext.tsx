@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.log("Erro ao fazer o login", error);
             toast.error("Erro ao logar, verifique seu e-mail ou senha e tente novamente.");
+        } finally {
             setLoading(false);
         }
     }
@@ -41,6 +42,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await signOut(auth);
         } catch (error) {   
             console.log("Erro ao fazer o logout", error);
+            toast.error("Erro ao deslogar, tente novamente.");
+        } finally {
+            setLoading(false);
         }
     };
 

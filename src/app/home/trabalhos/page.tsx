@@ -164,16 +164,16 @@ const exportarPDF = async (clienteId?: string) => {
             ]
           },
           layout: {
-            hLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+            hLineWidth: function (i: number, node: any) {
             return (i === 0 || i === node.table.body.length) ? 2 : 1;
             },
-            vLineWidth: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+            vLineWidth: function (i: number, node: any) {
             return (i === 0 || i === node.table.widths.length) ? 2 : 1;
             },
-            hLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+            hLineColor: function (i: number, node: any) {
             return (i === 0 || i === node.table.body.length) ? 'gray' : 'gray';
             },
-            vLineColor: function (i: number, node: any) {  // Tipo 'any' para o parâmetro node
+            vLineColor: function (i: number, node: any) {
             return (i === 0 || i === node.table.widths.length) ? 'gray' : 'gray';
             },
           }
@@ -222,16 +222,17 @@ const exportarPDF = async (clienteId?: string) => {
           return {
             id: doc.id,
             idCliente: data.cliente?.id,
-            nome: data.cliente?.nome || "Não informado",
-            valor: data.valorTotal || "Não informado",
-            statusOrdem: data.statusOrdem || "Não informado",
+            nome: data.cliente?.nome || " - ",
+            valor: data.valorTotal || " - ",
+            statusOrdem: data.statusOrdem || " - ",
             dataCriacao:
-              data.dataCriacao?.split("-").reverse().join("/") || "Não informado",
+              data.dataCriacao?.split("-").reverse().join("/") || " - ",
           };
         });
         setTrabalhos(trabalhosData);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
+        toast.error("Erro ao buscar dados. Tente novamente.");
       }
     });
     return () => unsubscribe();
@@ -239,13 +240,15 @@ const exportarPDF = async (clienteId?: string) => {
   
   const handleDelete = async (id: string) => {
     try {
-      const trabalhoRef = doc(firestore, "DadosTrabalhos", id);
+      const trabalhoRef = doc(firestore, "Trabalhos", id);
       await deleteDoc(trabalhoRef);
       setTrabalhos((prevTrabalhos) =>
         prevTrabalhos.filter((trabalho) => trabalho.id !== id)
       );
+      toast.success("Trabalho excluído com sucesso!");
     } catch (error) {
       console.error("Erro ao excluir Trabalho:", error);
+      toast.error("Erro ao excluir Trabalho. Tente novamente.");
     }
   };
 

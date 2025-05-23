@@ -6,6 +6,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { firestore } from "../../../services/firebase/firebaseconfig";
 import Link from "next/link";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
+import { toast } from "react-toastify";
 
 interface Trabalho {
   cliente: {
@@ -36,7 +37,6 @@ export default function TrabalhoDetalhes() {
   const { id } = useParams();
   const [trabalho, setTrabalho] = useState<Trabalho | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -64,11 +64,11 @@ export default function TrabalhoDetalhes() {
             statusPagamento: data.statusPagamento || ""
           });
         } else {
-          setError("Trabalho não encontrado");
+          console.log("Trabalho não encontrado");
         }
       } catch (error) {
         console.error("Erro ao buscar os dados:", error);
-        setError("Erro ao carregar trabalho");
+        toast.error("Erro ao carregar trabalho");
       } finally {
         setLoading(false);
       }
@@ -77,9 +77,24 @@ export default function TrabalhoDetalhes() {
     fetchData();
   }, [id]);
 
-  if (loading) return <p>Carregando...</p>;
-  if (error) return <p>{error}</p>;
-  if (!trabalho) return <p>Trabalho não encontrado.</p>;
+  if (loading) return <div className="flex justify-center items-center h-screen">
+      <p className="mr-4 text-lg">
+        Carregando...         
+      </p>
+      <svg className="animate-spin h-15 w-15 text-main-blue" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+    </div>;
+
+  if (!trabalho) return <div>
+      <div className="mb-4">
+        <Link href="/home/trabalhos">
+          <ArrowLeftCircleIcon className="size-8 text-main-blue cursor-pointer"/>
+        </Link>
+      </div>
+      Trabalho não encontrado.
+    </div>;
   
     return (
       <main>

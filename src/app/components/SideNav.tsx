@@ -17,8 +17,8 @@ export default function SideNav() {
 
   const handleLogout = async () => {
     try {
-      await logout(); // Realiza o logout
-      router.push('/'); // Redireciona para a página inicial
+      await logout();
+      router.push('/');
     } catch (error) {
       console.error("Erro ao fazer logout", error);
     }

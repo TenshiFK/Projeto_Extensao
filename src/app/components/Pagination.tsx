@@ -20,16 +20,16 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   const getPagesToShow = () => {
-    if (totalPages <= 5) return pages; // Se temos 5 ou menos páginas, mostramos todas.
+    if (totalPages <= 5) return pages;
     
-    const startPage = Math.max(1, currentPage - 1); // Páginas de 1 ao redor da atual.
-    const endPage = Math.min(totalPages, currentPage + 1); // Páginas de 1 ao redor da atual.
+    const startPage = Math.max(1, currentPage - 1);
+    const endPage = Math.min(totalPages, currentPage + 1);
 
     if (currentPage > 3) {
       return [1, '...', ...pages.slice(startPage - 1, endPage), '...', totalPages];
     }
 
-    return pages.slice(0, 3); // Mostrar no máximo 3 páginas se estiver nas primeiras páginas.
+    return pages.slice(0, 3);
   };
 
   const pagesToShow = getPagesToShow();

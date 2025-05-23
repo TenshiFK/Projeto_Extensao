@@ -3,7 +3,6 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// gabriel: esta pagina serve para conectar o projeto com o firebase.
 // caso precisem mudar os dados, mudem-nos no ".env.local" na @root do projeto.
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,7 +13,7 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp(); // Checa e inicializa os apps para deixar o rendering no lado do servidor.
+const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 const storage = getStorage(firebaseApp);

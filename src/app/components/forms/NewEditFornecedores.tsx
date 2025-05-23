@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { collection, addDoc, doc, updateDoc, } from 'firebase/firestore';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { db } from '@/app/services/firebase/firebaseconfig'; // Certifique-se de exportar corretamente o Firestore como `db`
+import { db } from '@/app/services/firebase/firebaseconfig';
+import { IMaskInput } from 'react-imask';
 
 interface Fornecedor {
   id?: string;
@@ -66,7 +67,6 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
         toast.success("Fornecedor cadastrado com sucesso");
       }
 
-      // Limpa o formulário
       setNomeFornecedor('');
       setEmail('');
       setTelefone('');
@@ -111,9 +111,11 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="nome" className="block text-sm/6 font-medium text-gray-900">
                 Nome do fornecedor
+                <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
                 <input
+                  required
                   id="nome"
                   name="nome"
                   type="text"
@@ -142,14 +144,21 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="telefone" className="block text-sm/6 font-medium text-gray-900">
                 Telefone/Celular
+                <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
-                <input
+                <IMaskInput
+                  mask={[
+                    '(00) 0000-0000',
+                    '(00) 00000-0000'   
+                  ]}
                   id="telefone"
                   name="telefone"
                   type="tel"
+                  required
+                  placeholder="(00) 00000-0000"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setTelefone(e.target.value)}
+                  onAccept={(value) => setTelefone(value)}
                   value={telefone}
                 />
               </div>
@@ -276,15 +285,18 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-10">
+      <div className="mt-6 flex items-center justify-end gap-x-12">
         <button
           type="submit"
-          className="text-center cursor-pointer bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-5 rounded-md hover:bg-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2"
+          className={`text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-6 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2
+            ${nomeFornecedor === '' || telefone === '' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-900 cursor-pointer'}
+            `}
+        disabled={nomeFornecedor === '' || telefone === ''}
         >
           Salvar
         </button>
-        <Link href="/home/fornecedores">
-          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-5 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+        <Link href="/home/clientes">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-6 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
             Cancelar
           </button>
         </Link>

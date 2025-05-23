@@ -11,6 +11,7 @@ import { collection, getDocs, query, where, deleteDoc, doc } from "firebase/fire
 import { firestore } from "../../services/firebase/firebaseconfig";
 import { paginate } from "@/app/lib/utils";
 import Modal from "@/app/components/modal/modal";
+import { toast } from "react-toastify";
 
 interface Fornecedor {
   id: string;
@@ -67,10 +68,10 @@ export default function Page() {
         const data = doc.data();
         return {
           id: doc.id,
-          nomeFornecedor: data.nomeFornecedor || "Não informado",
-          telefone: data.telefone || "Não informado",
-          email: data.email || "Não informado",
-          cidade: data.cidade || "Não informado",
+          nomeFornecedor: data.nomeFornecedor || " - ",
+          telefone: data.telefone || " - ",
+          email: data.email || " - ",
+          cidade: data.cidade || " - ",
         };
       });
   
@@ -88,8 +89,10 @@ export default function Page() {
       setFornecedores((prev) =>
         prev.filter((fornecedor) => fornecedor.id !== id)
       );
+      toast.success("Fornecedor excluído com sucesso!");
     } catch (error) {
       console.error("Erro ao excluir fornecedor:", error);
+      toast.error("Erro ao excluir fornecedor.");
     }
   };
 
