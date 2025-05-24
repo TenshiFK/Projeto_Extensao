@@ -32,6 +32,11 @@ interface Orcamento {
 }
 
 export default function OrcamentoDetalhes() {
+
+  useEffect(() => {
+    document.title = "Detalhes do Orçamento";
+  }, []);
+
   const { id } = useParams();
   const [orcamento, setOrcamento] = useState<Orcamento | null>(null);
   const [loading, setLoading] = useState(true);
@@ -279,6 +284,30 @@ export default function OrcamentoDetalhes() {
                 margin: [0, 10, 0, 0],
               },
             ],
+          },{
+            text: "Formas de Pagamento",
+            style: "title",
+          },
+          {
+            table: {
+              widths: ['auto'],
+              body: [
+                [{ text: '• Pix', fontSize: 10, fillColor: '#f9f9f9', margin: [5, 3, 5, 3] }],
+                [{ text: '• Dinheiro', fontSize: 10, fillColor: '#f9f9f9', margin: [5, 3, 5, 3] }],
+                [{ text: '• Cartão de crédito/débito (com acréscimo da máquina.)', fontSize: 10, fillColor: '#f9f9f9', margin: [5, 3, 5, 3] }],
+              ],
+            },
+            layout: {
+              hLineWidth: function (i: number, node: any) {
+                return (i === 0 || i === node.table.body.length) ? 1 : 0;
+              },
+              vLineWidth: function (i: number, node: any) {
+                return (i === 0 || i === node.table.widths.length) ? 1 : 0;
+              },
+              hLineColor: () => 'gray',
+              vLineColor: () => 'gray',
+            },
+            margin: [0, 0, 0, 10],
           },
         ],
         styles: {
@@ -290,6 +319,11 @@ export default function OrcamentoDetalhes() {
           subheader: {
             fontSize: 14,
             bold: true,
+          },
+          title: {
+            fontSize: 14,
+            bold: true,
+            margin: [0, 20, 0, 5],
           },
           details: {
             fontSize: 10,

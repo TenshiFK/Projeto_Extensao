@@ -42,6 +42,11 @@ const DEFAULT_ORCAMENTO: Orcamento = {
 };
 
 export default function Page() {
+
+  useEffect(() => {
+    document.title = "Editar Orçamento";
+  }, []);
+
   const { id } = useParams();
   const [orcamento, setOrcamento] = useState<Orcamento>(DEFAULT_ORCAMENTO);
   const [loading, setLoading] = useState(true);

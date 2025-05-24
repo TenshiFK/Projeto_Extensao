@@ -37,6 +37,12 @@ interface MovimentacaoEstoque {
 }
 
 export default function Page() {
+
+  useEffect(() => {
+    document.title = "Estoque";
+  }, []);
+
+
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -375,7 +381,7 @@ export default function Page() {
     const fetchProdutos = async () => {
       try {
         const produtosRef = collection(db, "Produtos");
-        const q = query(produtosRef);
+        const q = query(produtosRef, orderBy("dataCompra", "desc"));
         const querySnapshot = await getDocs(q);
 
         const produtosData: Produto[] = querySnapshot.docs.map((doc) => {

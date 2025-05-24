@@ -35,12 +35,27 @@ export default function NewEditClientForm({ cliente }: Props) {
   const [cep, setCep] = useState('');
   const [numero, setNumero] = useState('');
   const [complemento, setComplemento] = useState('');
+  const [errors, setErrors] = useState({
+    nome: false,
+    telefone: false,
+  });
 
   const { id } = useParams();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const newErrors = {
+      nome: nome.trim() === '',
+      telefone: telefone.trim() === '',
+    };
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some(Boolean)) {
+      toast.error('Preencha todos os campos obrigatórios!');
+      return;
+    }
 
     const dados = {
       nome,
@@ -52,6 +67,7 @@ export default function NewEditClientForm({ cliente }: Props) {
       cep,
       numero,
       complemento,
+      data: new Date().toISOString(),
     };
 
     try {
@@ -134,8 +150,9 @@ export default function NewEditClientForm({ cliente }: Props) {
                   id="nome"
                   name="nome"
                   type="text"
-                  required
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.nome ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onChange={(e) => setNome(e.target.value)}
                   value={nome}
                 />
@@ -171,9 +188,10 @@ export default function NewEditClientForm({ cliente }: Props) {
                   id="telefone"
                   name="telefone"
                   type="tel"
-                  required
                   placeholder="(00) 00000-0000"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.telefone ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onAccept={(value) => setTelefone(value)}
                   value={telefone}
                 />
@@ -291,18 +309,16 @@ export default function NewEditClientForm({ cliente }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-12">
+      <div className="mt-6 flex items-center justify-end gap-x-14">
         <button
           type="submit"
-          className={`text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-6 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2
-            ${nome === '' || telefone === '' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-900 cursor-pointer'}
-            `}
-        disabled={nome === '' || telefone === ''}
+          className="text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-8 rounded-md 
+          focus-visible:outline-2 focus-visible:outline-offset-2 cursor-pointer hover:bg-blue-900"
         >
           Salvar
         </button>
         <Link href="/home/clientes">
-          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-6 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-8 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
             Cancelar
           </button>
         </Link>

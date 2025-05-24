@@ -7,7 +7,7 @@ import Pagination from "@/app/components/Pagination";
 import Modal from "@/app/components/modal/modal";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { collection, onSnapshot, deleteDoc, doc } from "firebase/firestore";
+import { collection, onSnapshot, deleteDoc, doc, query, orderBy } from "firebase/firestore";
 import { firestore } from "../../services/firebase/firebaseconfig";
 import { paginate } from "@/app/lib/utils";
 import { toast } from "react-toastify";
@@ -22,6 +22,11 @@ interface Cliente {
 }
 
 export default function Page() {
+
+  useEffect(() => {
+    document.title = "Clientes";
+  }, []);
+
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,20 +62,25 @@ export default function Page() {
     { name: 'Ações' },
   ];
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(firestore, "Clientes"), (snapshot) => {
-      const clientesData: Cliente[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        nome: doc.data().nome || " - ",
-        telefone: doc.data().telefone || " - ",
-        email: doc.data().email || " - ",
-        tipoCliente: doc.data().tipoCliente || " - ",
-      }));
-      setClientes(clientesData);
-    });
+useEffect(() => {
+  const clientesRef = collection(firestore, "Clientes");
 
-    return () => unsubscribe();
-  }, []);
+  const q = query(clientesRef, orderBy("data", "desc"));  // ou "asc" se quiser crescente
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const clientesData: Cliente[] = snapshot.docs.map(doc => ({
+      id: doc.id,
+      nome: doc.data().nome || " - ",
+      telefone: doc.data().telefone || " - ",
+      email: doc.data().email || " - ",
+      tipoCliente: doc.data().tipoCliente || " - ",
+    }));
+
+    setClientes(clientesData);
+  });
+
+  return () => unsubscribe();
+}, []);
 
   const handleDelete = async (id: string) => {
     try {

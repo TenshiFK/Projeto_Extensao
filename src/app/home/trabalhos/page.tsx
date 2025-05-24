@@ -6,7 +6,7 @@ import Search from "@/app/components/forms/Search";
 import Pagination from "@/app/components/Pagination";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { collection, onSnapshot, deleteDoc, doc, getDocs } from "firebase/firestore";
+import { collection, onSnapshot, deleteDoc, doc, getDocs, query, orderBy } from "firebase/firestore";
 import { firestore } from "../../services/firebase/firebaseconfig";
 import { logoBase64, paginate } from "@/app/lib/utils";
 import Modal from "@/app/components/modal/modal";
@@ -26,6 +26,11 @@ interface Trabalho {
 }
 
 export default function Page() {
+
+  useEffect(() => {
+    document.title = "Trabalhos Realizados";
+  }, []);
+
   const [trabalhos, setTrabalhos] = useState<Trabalho[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -214,29 +219,34 @@ const exportarPDF = async (clienteId?: string) => {
   ];
 
   useEffect(() => {
-    const trabalhosRef = collection(firestore, "Trabalhos");
-    const unsubscribe = onSnapshot(trabalhosRef, (snapshot) => {
-      try {
-        const trabalhosData: Trabalho[] = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            idCliente: data.cliente?.id,
-            nome: data.cliente?.nome || " - ",
-            valor: data.valorTotal || " - ",
-            statusOrdem: data.statusOrdem || " - ",
-            dataCriacao:
-              data.dataCriacao?.split("-").reverse().join("/") || " - ",
-          };
-        });
-        setTrabalhos(trabalhosData);
-      } catch (error) {
-        console.error("Erro ao buscar dados:", error);
-        toast.error("Erro ao buscar dados. Tente novamente.");
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+  const trabalhosRef = collection(firestore, "Trabalhos");
+
+  // Aqui adicionamos o orderBy na dataCriacao
+  const q = query(trabalhosRef, orderBy("dataCriacao", "desc")); // ou "asc" para crescente
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    try {
+      const trabalhosData: Trabalho[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          idCliente: data.cliente?.id,
+          nome: data.cliente?.nome || " - ",
+          valor: data.valorTotal || " - ",
+          statusOrdem: data.statusOrdem || " - ",
+          dataCriacao:
+            data.dataCriacao?.split("-").reverse().join("/") || " - ",
+        };
+      });
+      setTrabalhos(trabalhosData);
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+      toast.error("Erro ao buscar dados. Tente novamente.");
+    }
+  });
+
+  return () => unsubscribe();
+}, []);
   
   const handleDelete = async (id: string) => {
     try {

@@ -22,6 +22,11 @@ interface Fornecedor {
 }
 
 export default function FornecedorDetalhes() {
+
+  useEffect(() => {
+    document.title = "Detalhes do Fornecedor";
+  }, []);
+
   const { id } = useParams();
   const [fornecedor, setFornecedor] = useState<Fornecedor | null>(null);
   const [loading, setLoading] = useState(true);

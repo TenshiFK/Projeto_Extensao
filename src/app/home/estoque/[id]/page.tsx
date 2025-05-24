@@ -22,6 +22,11 @@ interface Produto {
 }
 
 export default function ProdutoDetalhes() {
+
+  useEffect(() => {
+    document.title = "Detalhes do Produto";
+  }, []);
+
   const { id } = useParams();
   const [produto, setProduto] = useState<Produto | null>(null);
   const [loading, setLoading] = useState(true);

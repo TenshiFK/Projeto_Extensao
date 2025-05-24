@@ -2,6 +2,9 @@ import NewEditFornecedoresForm from "@/app/components/forms/NewEditFornecedores"
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
+export const metadata = {
+  title: 'Novo Fornecedor',
+};
 
 export default function Page() {
   

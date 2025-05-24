@@ -22,6 +22,11 @@ interface Cliente {
 }
 
 export default function Page() {
+
+  useEffect(() => {
+    document.title = "Editar Cliente";
+  }, []);
+  
   const params = useParams();
   const id = params?.id as string;
   const [cliente, setCliente] = useState<Cliente | null>(null);

@@ -35,6 +35,11 @@ interface Trabalho {
 }
 
 export default function ClienteDetalhes() {
+
+  useEffect(() => {
+    document.title = "Detalhes do Cliente";
+  }, []);
+
   const { id } = useParams();
   const searchParams = useSearchParams();
 

@@ -7,7 +7,7 @@ import Search from "@/app/components/forms/Search";
 import Pagination from "@/app/components/Pagination";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { collection, getDocs, query, where, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, deleteDoc, doc, orderBy } from "firebase/firestore";
 import { firestore } from "../../services/firebase/firebaseconfig";
 import { paginate } from "@/app/lib/utils";
 import Modal from "@/app/components/modal/modal";
@@ -23,6 +23,11 @@ interface Fornecedor {
 }
 
 export default function Page() {
+
+  useEffect(() => {
+    document.title = "Fornecedores";
+  }, []);
+
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -61,7 +66,7 @@ export default function Page() {
   useEffect(() => {
     const fetchFornecedores = async () => {
       const fornecedoresRef = collection(firestore, "Fornecedores");
-      const q = query(fornecedoresRef);
+      const q = query(fornecedoresRef, orderBy("data", "desc"));
   
       const querySnapshot = await getDocs(q);
       const fornecedoresData: Fornecedor[] = querySnapshot.docs.map((doc) => {

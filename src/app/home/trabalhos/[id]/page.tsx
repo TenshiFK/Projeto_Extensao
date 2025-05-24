@@ -34,6 +34,11 @@ interface Trabalho {
 }
 
 export default function TrabalhoDetalhes() {
+
+  useEffect(() => {
+    document.title = "Detalhes do Trabalho";
+  }, []);
+
   const { id } = useParams();
   const [trabalho, setTrabalho] = useState<Trabalho | null>(null);
   const [loading, setLoading] = useState(true);

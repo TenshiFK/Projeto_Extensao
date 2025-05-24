@@ -36,12 +36,28 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
   const [numero, setNumero] = useState('');
   const [complemento, setComplemento] = useState('');
   const [informacoesAdicionais, setInformacoesAdicionais] = useState('');
+  const [errors, setErrors] = useState({
+    nomeFornecedor: false,
+    telefone: false,
+  });
 
   const { id } = useParams();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const newErrors = {
+      nomeFornecedor: nomeFornecedor.trim() === '',
+      telefone: telefone.trim() === '',
+    };
+
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some(Boolean)) {
+      toast.error('Preencha todos os campos obrigatórios!');
+      return;
+    }
 
     const dados = {
       nomeFornecedor,
@@ -53,7 +69,8 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
       cep,
       numero,
       complemento,
-      informacoesAdicionais
+      informacoesAdicionais,
+      data: new Date().toISOString(),
     };
 
     try {
@@ -115,11 +132,12 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
               </label>
               <div className="mt-2">
                 <input
-                  required
                   id="nome"
                   name="nome"
                   type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.nomeFornecedor ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onChange={(e) => setNomeFornecedor(e.target.value)}
                   value={nomeFornecedor}
                 />
@@ -155,9 +173,10 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
                   id="telefone"
                   name="telefone"
                   type="tel"
-                  required
                   placeholder="(00) 00000-0000"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.telefone ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onAccept={(value) => setTelefone(value)}
                   value={telefone}
                 />
@@ -221,12 +240,13 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
                 CEP
               </label>
               <div className="mt-2">
-                <input
+                <IMaskInput
+                  mask="00000-000"
                   id="cep"
                   name="cep"
                   type="text"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setCep(e.target.value)}
+                  onAccept={(value) => setCep(value)}
                   value={cep}
                 />
               </div>
@@ -237,12 +257,13 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
                 Número
               </label>
               <div className="mt-2">
-                <input
+                <IMaskInput
+                  mask="00000"
                   id="numero"
                   name="numero"
                   type="text"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setNumero(e.target.value)}
+                  onAccept={(value) => setNumero(value)}
                   value={numero}
                 />
               </div>
@@ -285,18 +306,16 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-12">
+      <div className="mt-6 flex items-center justify-end gap-x-14">
         <button
           type="submit"
-          className={`text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-6 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2
-            ${nomeFornecedor === '' || telefone === '' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-900 cursor-pointer'}
-            `}
-        disabled={nomeFornecedor === '' || telefone === ''}
+          className="text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-8 rounded-md 
+          focus-visible:outline-2 focus-visible:outline-offset-2 cursor-pointer hover:bg-blue-900"
         >
           Salvar
         </button>
-        <Link href="/home/clientes">
-          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-6 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+        <Link href="/home/fornecedores">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-8 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
             Cancelar
           </button>
         </Link>

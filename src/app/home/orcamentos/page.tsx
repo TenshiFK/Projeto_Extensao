@@ -6,7 +6,7 @@ import Search from "@/app/components/forms/Search";
 import Pagination from "@/app/components/Pagination";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { collection, query, where, getDocs, deleteDoc, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, deleteDoc, doc, getDoc, orderBy } from "firebase/firestore";
 import { firestore } from "../../services/firebase/firebaseconfig";
 import { paginate } from "@/app/lib/utils";
 import Modal from "@/app/components/modal/modal";
@@ -15,6 +15,7 @@ import pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
 import { logoBase64 } from "@/app/lib/utils";
 import { toast } from "react-toastify";
+import { title } from "process";
 
 interface Orcamentos {
   id: string;
@@ -26,6 +27,11 @@ interface Orcamentos {
 }
 
 export default function Page() {
+
+  useEffect(() => {
+    document.title = "Orçamentos";
+  }, []);
+
   const [orcamentos, setOrcamento] = useState<Orcamentos[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -332,6 +338,31 @@ export default function Page() {
               },
             ],
           },
+          {
+            text: "Formas de Pagamento",
+            style: "title",
+          },
+          {
+            table: {
+              widths: ['auto'],
+              body: [
+                [{ text: '• Pix', fontSize: 10, fillColor: '#f9f9f9', margin: [5, 3, 5, 3] }],
+                [{ text: '• Dinheiro', fontSize: 10, fillColor: '#f9f9f9', margin: [5, 3, 5, 3] }],
+                [{ text: '• Cartão de crédito/débito (com acréscimo da máquina.)', fontSize: 10, fillColor: '#f9f9f9', margin: [5, 3, 5, 3] }],
+              ],
+            },
+            layout: {
+              hLineWidth: function (i: number, node: any) {
+                return (i === 0 || i === node.table.body.length) ? 1 : 0;
+              },
+              vLineWidth: function (i: number, node: any) {
+                return (i === 0 || i === node.table.widths.length) ? 1 : 0;
+              },
+              hLineColor: () => 'gray',
+              vLineColor: () => 'gray',
+            },
+            margin: [0, 0, 0, 10],
+          },
         ],
         styles: {
           header: {
@@ -342,6 +373,11 @@ export default function Page() {
           subheader: {
             fontSize: 14,
             bold: true,
+          },
+          title: {
+            fontSize: 14,
+            bold: true,
+            margin: [0, 20, 0, 5],
           },
           details: {
             fontSize: 10,
@@ -368,7 +404,7 @@ export default function Page() {
   useEffect(() => {
     const fetchOrcamentos = async () => {
       const orcamentosRef = collection(firestore, "Orcamentos");
-      const q = query(orcamentosRef);
+      const q = query(orcamentosRef, orderBy("dataCriacao", "desc"));
 
       const querySnapshot = await getDocs(q);
 

@@ -44,25 +44,30 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
   const [clientesDisponiveis, setClientesDisponiveis] = useState<{ id: string; nome: string }[]>([]);
   const [produtosDisponiveis, setProdutosDisponiveis] = useState<{ id: string; nomeProduto: string }[]>([]);
 
+  const [errors, setErrors] = useState({
+    titulo: false,
+    dataCriacao: false,
+    valorTotal: false,
+  });
+
   const { id } = useParams();
   const router = useRouter();
 
-  const ifFormEmpty =
-  titulo.trim() === '' &&
-  cliente.nome.trim() === '' &&
-  descricao.trim() === '' &&
-  solucao.trim() === '' &&
-  dataCriacao.trim() === '' &&
-  garantia.trim() === '' &&
-  produtos.trim() === '' &&
-  quantidadeProdutos.trim() === '' &&
-  outros.trim() === '' &&
-  valorFrete.trim() === '' &&
-  valorTotal.trim() === ''
-  ;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const newErrors = {
+      titulo: titulo.trim() === '',
+      dataCriacao: dataCriacao.trim() === '',
+      valorTotal: valorTotal.trim() === '',
+    };
+
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some(Boolean)) {
+      toast.error('Preencha todos os campos obrigatórios!');
+      return;
+    } 
 
     const dados = {
       titulo,
@@ -173,11 +178,12 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
               </label>
               <div className="mt-2">
                 <input
-                  required
                   id="titulo"
                   name="titulo"
                   type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.titulo ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onChange={(e) => setTitulo(e.target.value)}
                   value={titulo}
                 />
@@ -222,11 +228,12 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
               </label>
               <div className="mt-2">
                 <input
-                  required
                   id="dataCriacao"
                   name="dataCriacao"
                   type="date"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.dataCriacao ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onChange={(e) => setDataCriacao(e.target.value)}
                   value={dataCriacao}
                 />
@@ -323,16 +330,16 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
             </div>
 
             <div className="sm:col-span-1 col-span-6">
-              <label htmlFor="bairro" className="block text-sm/6 font-medium text-gray-900">
+              <label htmlFor="quantidade" className="block text-sm/6 font-medium text-gray-900">
                 Quantidade
               </label>
               <div className="mt-2">
-                <input
-                  id="bairro"
-                  name="bairro"
-                  type="text"
+                <IMaskInput
+                  mask={Number}
+                  id="quantidade"
+                  name="quantidade"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setQuantidadeProdutos(e.target.value)}
+                  onAccept={(value) => setQuantidadeProdutos(value)}
                   value={quantidadeProdutos}
                 />
               </div>
@@ -437,7 +444,6 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
               </label>
               <div className="mt-2">
                 <IMaskInput
-                  required
                   mask={Number}
                   id="valorTotal"
                   name="valorTotal"
@@ -448,7 +454,9 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
                   normalizeZeros={true}
                   padFractionalZeros={true}
                   placeholder='00,00'
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.valorTotal ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onAccept={(value) => setValorTotal(value)}
                   value={valorTotal}
                 />
@@ -462,24 +470,22 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
                 <li>• Dinheiro</li>
                 <li>• Cartão de crédito/débito (com acréscimo da máquina.)</li>
               </ul>
-
             </div>
 
           </div>
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-12">
+      <div className="mt-6 flex items-center justify-end gap-x-14">
         <button
           type="submit"
-          disabled={ifFormEmpty}
-          className={`text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-6 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2
-          ${ifFormEmpty ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-900 cursor-pointer'}`}
+          className="text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-8 rounded-md 
+          focus-visible:outline-2 focus-visible:outline-offset-2 cursor-pointer hover:bg-blue-900"
         >
           Salvar
         </button>
-        <Link href="/home/trabalhos">
-          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-6 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+        <Link href="/home/orcamentos">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-8 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
             Cancelar
           </button>
         </Link>

@@ -2,6 +2,10 @@ import NewEditProdutoForm from "@/app/components/forms/NewEditEstoque";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
+export const metadata = {
+  title: 'Novo Produto',
+};
+
 export default function Page() {
   
 

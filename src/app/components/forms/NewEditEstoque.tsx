@@ -48,6 +48,12 @@ export default function NewEditProdutoForm({ produto }: Props) {
   const [fornecedor, setFornecedor] = useState<{ id: string; nomeFornecedor: string }>({ id: '', nomeFornecedor: '' });
   const [descricao, setDescricao] = useState('');
   const [fornecedoresDisponiveis, setFornecedoresDisponiveis] = useState<{ id: string; nomeFornecedor: string }[]>([]);
+  const [errors, setErrors] = useState({
+    nomeProduto: false,
+    valor: false,
+    dataCompra: false,
+    quantidade: false,
+  });
 
   const { id } = useParams();
   const router = useRouter();
@@ -65,6 +71,20 @@ export default function NewEditProdutoForm({ produto }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const newErrors = {
+      nomeProduto: nomeProduto.trim() === '',
+      valor: valor.trim() === '',
+      dataCompra: dataCompra.trim() === '',
+      quantidade: quantidade.trim() === '',
+    };
+
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some(Boolean)) {
+      toast.error('Preencha todos os campos obrigatórios!');
+      return;
+    }
 
     const dados = {
       nomeProduto,
@@ -173,11 +193,12 @@ export default function NewEditProdutoForm({ produto }: Props) {
               </label>
               <div className="mt-2">
                 <input
-                  required
                   id="nomeProduto"
                   name="nomeProduto"
                   type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.nomeProduto ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onChange={(e) => setNomeProduto(e.target.value)}
                   value={nomeProduto}
                 />
@@ -192,7 +213,6 @@ export default function NewEditProdutoForm({ produto }: Props) {
               <div className="mt-2">
                 <IMaskInput
                   mask={Number}
-                  required
                   id="valor"
                   name="valor"
                   scale={2}
@@ -202,7 +222,9 @@ export default function NewEditProdutoForm({ produto }: Props) {
                   normalizeZeros={true}
                   padFractionalZeros={true}
                   placeholder='00,00'
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.valor ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onAccept={(value) => setValor(value)}
                   value={valor}
                 />
@@ -216,11 +238,12 @@ export default function NewEditProdutoForm({ produto }: Props) {
               </label>
               <div className="mt-2">
                 <input
-                  required
                   id="dataCompra"
                   name="dataCompra"
                   type="date"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.dataCompra ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onChange={(e) => setDataCompra(e.target.value)}
                   value={dataCompra}
                 />
@@ -249,13 +272,14 @@ export default function NewEditProdutoForm({ produto }: Props) {
                 <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
-                <input
-                  required
+                <IMaskInput
+                  mask={Number}
                   id="quantidade"
                   name="quantidade"
-                  type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setQuantidade(e.target.value)}
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.quantidade ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
+                  onAccept={(value) => setQuantidade(value)}
                   value={quantidade}
                 />
               </div>
@@ -316,18 +340,16 @@ export default function NewEditProdutoForm({ produto }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-12">
+      <div className="mt-6 flex items-center justify-end gap-x-14">
         <button
           type="submit"
-          className={`text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-6 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2
-          ${nomeProduto === '' || valor === '' || dataCompra === '' || quantidade === '' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-900'}  
-          `}
-          disabled={nomeProduto === '' || valor === '' || dataCompra === '' || quantidade === ''}
+          className="text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-8 rounded-md 
+          focus-visible:outline-2 focus-visible:outline-offset-2 cursor-pointer hover:bg-blue-900"
         >
           Salvar
         </button>
         <Link href="/home/estoque">
-          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-6 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-8 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
             Cancelar
           </button>
         </Link>

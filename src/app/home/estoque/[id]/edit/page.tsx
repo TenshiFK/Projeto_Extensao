@@ -23,6 +23,11 @@ interface Produto {
 }
 
 export default function Page() {
+
+  useEffect(() => {
+    document.title = "Editar Produto";
+  }, []);
+
   const { id } = useParams();
   const [produto, setProduto] = useState<Produto | null>(null);
   const [loading, setLoading] = useState(true);

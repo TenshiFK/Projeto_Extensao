@@ -1,6 +1,7 @@
 import SideNav from "../components/SideNav";
 import PrivateRoute from "../components/private/PrivateRoute";
 
+
  
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

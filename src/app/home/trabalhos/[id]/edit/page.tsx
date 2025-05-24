@@ -35,6 +35,11 @@ interface Trabalho {
 }
 
 export default function Page() {
+
+  useEffect(() => {
+    document.title = "Editar Trabalho";
+  }, []);
+
   const { id } = useParams();
   const [trabalho, setTrabalho] = useState<Trabalho | null>(null);
   const [loading, setLoading] = useState(true);

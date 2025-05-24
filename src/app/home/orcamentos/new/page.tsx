@@ -2,6 +2,10 @@ import NewEditOrcamentoForm from "@/app/components/forms/NewEditOrcamento";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
+export const metadata = {
+  title: 'Novo Orçamento',
+};
+
 export default function Page() {
   
 

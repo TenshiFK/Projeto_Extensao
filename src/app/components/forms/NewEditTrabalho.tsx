@@ -51,28 +51,28 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
   const [produtosDisponiveis, setProdutosDisponiveis] = useState<{ id: string; nomeProduto: string }[]>([]);
   const [orcamentosDisponiveis, setOrcamentosDisponiveis] = useState<{ id: string; titulo: string }[]>([]);
 
+  const [errors, setErrors] = useState({
+    dataCriacao: false,
+    valorTotal: false,
+  });
+
   const { id } = useParams();
   const router = useRouter();
 
-  const ifFormEmpty =
-  cliente.nome.trim() === '' &&
-  orcamento.titulo.trim() === '' &&
-  descricao.trim() === '' &&
-  solucao.trim() === '' &&
-  dataCriacao.trim() === '' &&
-  garantia.trim() === '' &&
-  statusOrdem.trim() === '' &&
-  produtos.trim() === '' &&
-  quantidadeProdutos.trim() === '' &&
-  outros.trim() === '' &&
-  valorFrete.trim() === '' &&
-  valorTotal.trim() === '' &&
-  pagamento.trim() === '' &&
-  statusPagamento.trim() === ''
-  ;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const newErrors = {
+      dataCriacao: dataCriacao.trim() === '',
+      valorTotal: valorTotal.trim() === '',
+    };
+
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some(Boolean)) {
+      toast.error('Preencha todos os campos obrigatórios!');
+      return;
+    }
 
     const dados = {
       cliente,
@@ -300,11 +300,12 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
               </label>
               <div className="mt-2">
                 <input
-                  required
                   id="dataCriacao"
                   name="dataCriacao"
                   type="date"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.dataCriacao ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onChange={(e) => setDataCriacao(e.target.value)}
                   value={dataCriacao}
                 />
@@ -395,12 +396,12 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                 Quantidade
               </label>
               <div className="mt-2">
-                <input
+                <IMaskInput
+                  mask={Number}
                   id="quantidade"
                   name="quantidade"
-                  type="text"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setQuantidadeProdutos(e.target.value)}
+                  onAccept={(value) => setQuantidadeProdutos(value)}
                   value={quantidadeProdutos}
                 />
               </div>
@@ -505,7 +506,6 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
               </label>
               <div className="mt-2">
                 <IMaskInput
-                  required
                   mask={Number}
                   id="valorTotal"
                   name="valorTotal"
@@ -516,7 +516,9 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                   normalizeZeros={true}
                   padFractionalZeros={true}
                   placeholder='00,00'
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.valorTotal ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
                   onAccept={(value) => setValorTotal(value)}
                   value={valorTotal}
                 />
@@ -577,17 +579,16 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-x-12">
+      <div className="mt-6 flex items-center justify-end gap-x-14">
         <button
           type="submit"
-          disabled={ifFormEmpty}
-          className={`text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-6 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2
-          ${ifFormEmpty ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-900 cursor-pointer'}`}
+          className="text-center bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-8 rounded-md 
+          focus-visible:outline-2 focus-visible:outline-offset-2 cursor-pointer hover:bg-blue-900"
         >
           Salvar
         </button>
         <Link href="/home/trabalhos">
-          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-6 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+          <button type="button" className="cursor-pointer lg:text-base text-sm font-semibold text-main-white py-2 px-8 bg-red-500 rounded-md shadow-xs hover:bg-red-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
             Cancelar
           </button>
         </Link>
