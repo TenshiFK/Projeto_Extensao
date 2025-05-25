@@ -6,7 +6,7 @@ import Search from "@/app/components/forms/Search";
 import Pagination from "@/app/components/Pagination";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { collection, query, where, getDocs, deleteDoc, doc, getDoc, orderBy } from "firebase/firestore";
+import { collection, query, getDocs, deleteDoc, doc, getDoc, orderBy } from "firebase/firestore";
 import { firestore } from "../../services/firebase/firebaseconfig";
 import { paginate } from "@/app/lib/utils";
 import Modal from "@/app/components/modal/modal";
@@ -15,11 +15,11 @@ import pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
 import { logoBase64 } from "@/app/lib/utils";
 import { toast } from "react-toastify";
-import { title } from "process";
 
 interface Orcamentos {
   id: string;
   nome: string;
+  titulo: string;
   valor: string;
   garantia: string;
   dataCriacao: string;
@@ -47,6 +47,7 @@ export default function Page() {
 
   const titlesHead = [
     { name: 'Nome do cliente' },
+    { name: 'Título'},
     { name: 'Tempo de garantia' },
     { name: 'Data de Criação' },
     { name: 'Valor(R$)' },
@@ -411,6 +412,7 @@ export default function Page() {
       const orcamentosData: Orcamentos[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         nome: doc.data().cliente.nome || " - ",
+        titulo: doc.data().titulo || " - ",
         garantia: doc.data().garantia || " - ",
         dataCriacao: doc.data().dataCriacao.split("-").reverse().join("/") || " - ",
         valor: doc.data().valorTotal,
@@ -449,6 +451,7 @@ export default function Page() {
       orcamento.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       orcamento.valor.toLowerCase().includes(searchTerm.toLowerCase()) ||
       orcamento.garantia.includes(searchTerm) ||
+      orcamento.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       orcamento.dataCriacao.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesTipo = tipoFiltro

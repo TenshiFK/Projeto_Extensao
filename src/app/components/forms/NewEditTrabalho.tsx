@@ -10,6 +10,7 @@ import { IMaskInput } from 'react-imask';
 
 interface Trabalho {
   id?: string;
+  titulo: string;
   cliente: { id: string; nome: string };
   orcamento?: { id: string; titulo: string };
   descricao: string;
@@ -31,6 +32,7 @@ interface Props {
 
 
 export default function NewEditTrabalhoForm({ trabalho }: Props) {
+  const [titulo, setTitulo] = useState('');
   const [cliente, setCliente] = useState({ id: '', nome: '' });
   const [orcamento, setOrcamento] = useState({ id: '', titulo: '' });
   const [descricao, setDescricao] = useState('');
@@ -49,9 +51,10 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
 
   const [clientesDisponiveis, setClientesDisponiveis] = useState<{ id: string; nome: string }[]>([]);
   const [produtosDisponiveis, setProdutosDisponiveis] = useState<{ id: string; nomeProduto: string }[]>([]);
-  const [orcamentosDisponiveis, setOrcamentosDisponiveis] = useState<{ id: string; titulo: string }[]>([]);
+  const [orcamentosDisponiveis, setOrcamentosDisponiveis] = useState<{ id: string; titulo: string; cliente: string }[]>([]);
 
   const [errors, setErrors] = useState({
+    titulo: false,
     dataCriacao: false,
     valorTotal: false,
   });
@@ -63,6 +66,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
     e.preventDefault();
 
     const newErrors = {
+      titulo: titulo.trim() === '',
       dataCriacao: dataCriacao.trim() === '',
       valorTotal: valorTotal.trim() === '',
     };
@@ -75,6 +79,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
     }
 
     const dados = {
+      titulo,
       cliente,
       orcamento,
       descricao,
@@ -100,7 +105,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
       await addDoc(trabalhosRef, dados);
       toast.success('Trabalho cadastrado com sucesso!');
     }
-
+      setTitulo('');
       setCliente({ id: '', nome: '' });
       setOrcamento({ id: '', titulo: '' });
       setDescricao('');
@@ -165,6 +170,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
         const lista = snapshot.docs.map(doc => ({
           id: doc.id,
           titulo: doc.data().titulo,
+          cliente: doc.data().cliente.nome,
         }));
         setOrcamentosDisponiveis(lista);
       } catch (error) {
@@ -177,7 +183,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
 
   useEffect(() => {
     if (trabalho) {
-  
+      setTitulo(trabalho.titulo);
       setCliente(trabalho.cliente);
       setOrcamento(trabalho.orcamento || { id: '', titulo: '' });
       setDescricao(trabalho.descricao);
@@ -203,6 +209,24 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
             <div className="col-span-6">
               <h2 className="text-base/7 font-semibold text-gray-900">Informações Gerais:</h2>
             </div>  
+            <div className="sm:col-span-3 col-span-6">
+              <label htmlFor="titulo" className="block text-sm/6 font-medium text-gray-900">
+                Título
+                <span className='text-red-500 ml-1 text-lg'>*</span>
+              </label>
+              <div className="mt-2">
+                <input
+                  id="titulo"
+                  name="titulo"
+                  type="text"
+                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.titulo ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  value={titulo}
+                />
+              </div>
+            </div>
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="cliente" className="block text-sm/6 font-medium text-gray-900">
                 Cliente
@@ -244,13 +268,13 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                   name="orcamento"
                   className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   onChange={
-                    (e) => setOrcamento({ id: e.target.value, titulo: e.target.options[e.target.selectedIndex].text })}
+                    (e) => setOrcamento({ id: e.target.value, titulo: e.target.options[e.target.selectedIndex].text})}
                   value={orcamento.id}
                 >
                   <option>Selecione</option>
                   { orcamentosDisponiveis.map((orcamento) => (
                     <option key={orcamento.id} value={orcamento.id}>  
-                      {orcamento.titulo}
+                      {orcamento.titulo} - {orcamento.cliente}
                     </option>
                   ))}
                 </select>
@@ -261,18 +285,21 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
               </div>
             </div>
 
+            <div className='hidden sm:block sm:col-span-2'></div>
+
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="descricao" className="block text-sm/6 font-medium text-gray-900">
                 Descrição
               </label>
               <div className="mt-2">
-                <input
+                <textarea
                   id="descricao"
                   name="descricao"
-                  type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  rows={4}
+                  className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm"
                   onChange={(e) => setDescricao(e.target.value)}
                   value={descricao}
+                  placeholder="Digite a descrição do problema aqui..."
                 />
               </div>
             </div>
@@ -282,13 +309,14 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                 Solução Proposta
               </label>
               <div className="mt-2">
-                <input
+                <textarea
                   id="solucao"
                   name="solucao"
-                  type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  rows={4}
+                  className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm"
                   onChange={(e) => setSolucao(e.target.value)}
                   value={solucao}
+                  placeholder="Digite a solução aqui..."
                 />
               </div>
             </div>
@@ -296,7 +324,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="dataCriacao" className="block text-sm/6 font-medium text-gray-900">
                 Data de Criação
-                <span className='text-red-500 ml-1 text-base'>*</span>
+                <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <input
@@ -502,7 +530,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="valorTotal" className="block text-sm/6 font-medium text-gray-900">
                 Valor Total
-                <span className='text-red-500 ml-1 text-base'>*</span>
+                <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <IMaskInput

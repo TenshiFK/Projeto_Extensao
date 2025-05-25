@@ -59,7 +59,7 @@ export default function Page() {
     { name: "Nome do Fornecedor" },
     { name: "Telefone/Celular" },
     { name: "E-mail" },
-    { name: "Cidade" },
+    { name: "Cidade/Internet" },
     { name: "Ações" },
   ];
 
@@ -120,7 +120,7 @@ export default function Page() {
 
     const matchesTipo = tipoFiltro
       ? tipoFiltro === "outra"
-        ? fornecedor.cidade.toLowerCase() !== "guarapuava" && fornecedor.cidade.toLowerCase() !== "curitiba"
+        ? fornecedor.cidade.toLowerCase() !== "guarapuava" && fornecedor.cidade.toLowerCase() !== "curitiba" && fornecedor.cidade.toLowerCase() !== "internet"
         : fornecedor.cidade.toLowerCase() === tipoFiltro.toLowerCase()
       : true;
 
@@ -146,6 +146,7 @@ export default function Page() {
             <option value="">Filtrar</option>
             <option value="Guarapuava">Guarapuava</option>
             <option value="Curitiba">Curitiba</option>
+            <option value="Internet">Internet</option>
             <option value="outra">Outra Cidade</option>
           </select>
         </div>

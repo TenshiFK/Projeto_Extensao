@@ -143,7 +143,7 @@ export default function NewEditClientForm({ cliente }: Props) {
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="nome" className="block text-sm/6 font-medium text-gray-900">
                 Nome do cliente
-                <span className='text-red-500 ml-1 text-base'>*</span>
+                <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <input
@@ -177,7 +177,7 @@ export default function NewEditClientForm({ cliente }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="telefone" className="block text-sm/6 font-medium text-gray-900">
                 Telefone/Celular
-                <span className='text-red-500 ml-1 text-base'>*</span>
+                <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <IMaskInput

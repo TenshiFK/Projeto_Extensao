@@ -19,6 +19,7 @@ interface Trabalho {
   id: string;
   idCliente: string;
   nome: string;
+  titulo: string;
   valor: string;
   statusOrdem: string;
   dataCriacao: string;
@@ -212,6 +213,7 @@ const exportarPDF = async (clienteId?: string) => {
 
   const titlesHead = [
     { name: "Nome do cliente" },
+    { name: "Título"},
     { name: "Valor(R$)" },
     { name: "Status da Ordem" },
     { name: "Data de Criação" },
@@ -232,6 +234,7 @@ const exportarPDF = async (clienteId?: string) => {
           id: doc.id,
           idCliente: data.cliente?.id,
           nome: data.cliente?.nome || " - ",
+          titulo: data.titulo || " - ",
           valor: data.valorTotal || " - ",
           statusOrdem: data.statusOrdem || " - ",
           dataCriacao:
@@ -277,6 +280,7 @@ const exportarPDF = async (clienteId?: string) => {
       trabalho.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       trabalho.valor.toLowerCase().includes(searchTerm.toLowerCase()) ||
       trabalho.statusOrdem.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      trabalho.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       trabalho.dataCriacao.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesTipo = tipoFiltro

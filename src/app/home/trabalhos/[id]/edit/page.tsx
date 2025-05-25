@@ -18,6 +18,7 @@ interface Trabalho {
     id: string;
     titulo: string;
   };
+  titulo: string;
   descricao: string;
   solucao: string;
   dataCriacao: string;

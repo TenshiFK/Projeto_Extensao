@@ -17,6 +17,7 @@ interface Trabalho {
     id: string;
     titulo: string;
   };
+  titulo?: string;
   descricao: string;
   solucao: string;
   dataCriacao: string;
@@ -57,6 +58,7 @@ export default function TrabalhoDetalhes() {
             cliente: data.cliente || { id: "", nome: "Cliente não especificado" },
             orcamento: data.orcamento || { id: "", titulo: "" },
             descricao: data.descricao || "",
+            titulo: data.titulo || "",
             solucao: data.solucao || "",
             dataCriacao: data.dataCriacao || "",
             garantia: data.garantia || "",
@@ -116,6 +118,18 @@ export default function TrabalhoDetalhes() {
             <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-6">
               <div className="col-span-6">
                 <h2 className="text-base/7 font-semibold text-gray-900">Informações Gerais:</h2>
+              </div>
+              <div className="sm:col-span-3 col-span-6">
+                <p className="block text-sm/6 font-medium text-gray-900">
+                  Título
+                </p>
+                <div className="mt-2 grid grid-cols-1">
+                  <div
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                  >
+                    {trabalho.titulo || " -"}
+                  </div>
+                </div>
               </div>  
               <div className="sm:col-span-3 col-span-6">
                 <p className="block text-sm/6 font-medium text-gray-900">
@@ -141,6 +155,8 @@ export default function TrabalhoDetalhes() {
                   </div>
                 </div>
               </div>
+
+              <div className='hidden sm:block sm:col-span-2'></div>
 
               <div className="sm:col-span-3 col-span-6">
                 <p className="block text-sm/6 font-medium text-gray-900">

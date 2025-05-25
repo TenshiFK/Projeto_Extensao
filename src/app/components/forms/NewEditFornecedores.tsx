@@ -11,13 +11,14 @@ interface Fornecedor {
   id?: string;
   nomeFornecedor: string;
   email?: string;
-  telefone: string;
+  telefone?: string;
   endereco?: string;
   bairro?: string;
   cidade?: string;
   cep?: string;
   numero?: string;
   complemento?: string;
+  site?: string;
   informacoesAdicionais?: string;
 }
 
@@ -29,6 +30,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
   const [nomeFornecedor, setNomeFornecedor] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
+  const [site, setSite] = useState('');
   const [cidade, setCidade] = useState('');
   const [endereco, setEndereco] = useState('');
   const [bairro, setBairro] = useState('');
@@ -36,9 +38,9 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
   const [numero, setNumero] = useState('');
   const [complemento, setComplemento] = useState('');
   const [informacoesAdicionais, setInformacoesAdicionais] = useState('');
+  const [internet, setInternet] = useState(false);
   const [errors, setErrors] = useState({
     nomeFornecedor: false,
-    telefone: false,
   });
 
   const { id } = useParams();
@@ -49,7 +51,6 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
 
     const newErrors = {
       nomeFornecedor: nomeFornecedor.trim() === '',
-      telefone: telefone.trim() === '',
     };
 
     setErrors(newErrors);
@@ -63,6 +64,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
       nomeFornecedor,
       email,
       telefone,
+      site,
       cidade,
       endereco,
       bairro,
@@ -89,6 +91,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
       setTelefone('');
       setCidade('');
       setEndereco('');
+      setSite('');
       setBairro('');
       setCep('');
       setNumero('');
@@ -106,7 +109,8 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
     if (fornecedor) {
       setNomeFornecedor(fornecedor.nomeFornecedor);
       setEmail(fornecedor.email || '');
-      setTelefone(fornecedor.telefone);
+      setTelefone(fornecedor.telefone || '');
+      setSite(fornecedor.site || '');
       setEndereco(fornecedor.endereco || '');
       setBairro(fornecedor.bairro || '');
       setCidade(fornecedor.cidade || '');
@@ -128,7 +132,7 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="nome" className="block text-sm/6 font-medium text-gray-900">
                 Nome do fornecedor
-                <span className='text-red-500 ml-1 text-base'>*</span>
+                <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <input
@@ -162,7 +166,6 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="telefone" className="block text-sm/6 font-medium text-gray-900">
                 Telefone/Celular
-                <span className='text-red-500 ml-1 text-base'>*</span>
               </label>
               <div className="mt-2">
                 <IMaskInput
@@ -174,117 +177,184 @@ export default function NewEditFornecedoresForm({ fornecedor }: Props) {
                   name="telefone"
                   type="tel"
                   placeholder="(00) 00000-0000"
-                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
-                    errors.telefone ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
-                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
+                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                   onAccept={(value) => setTelefone(value)}
                   value={telefone}
                 />
               </div>
             </div>
 
-            <div className='sm:col-span-full mt-3 w-60'>
-              <h2 className="text-base/7 font-semibold text-gray-900">Endereço</h2>
-            </div>
-
-            <div className="sm:col-span-2 col-span-6">
-              <label htmlFor="endereco" className="block text-sm/6 font-medium text-gray-900">
-                Endereço
+            <div className="sm:col-span-6 col-span-6 sm:items-center sm:justify-between">
+              <label htmlFor="internet" className="block text-sm/6 font-medium text-gray-900">
+                Fornecedor da Internet
               </label>
               <div className="mt-2">
                 <input
-                  id="endereco"
-                  name="endereco"
-                  type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setEndereco(e.target.value)}
-                  value={endereco}
+                  id="internet"
+                  name="internet"
+                  type="checkbox"
+                  className="h-5 w-5 rounded-md bg-white text-indigo-600 focus:ring-indigo-500"
+                  onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      setInternet(isChecked);
+                      if (isChecked) {
+                        setCidade('Internet');
+                      } else {
+                        setCidade('');
+                      }
+                    }}
+                  checked={internet}
                 />
               </div>
             </div>
 
-            <div className="sm:col-span-2 col-span-6">
-              <label htmlFor="bairro" className="block text-sm/6 font-medium text-gray-900">
-                Bairro
-              </label>
-              <div className="mt-2">
-                <input
-                  id="bairro"
-                  name="bairro"
-                  type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setBairro(e.target.value)}
-                  value={bairro}
-                />
-              </div>
-            </div>
+            {
+              internet && (
+                <>
+                  <div className="sm:col-span-6 col-span-6">
+                    <label htmlFor="site" className="block text-sm/6 font-medium text-gray-900">
+                      Site
+                    </label>
+                    <div className="mt-2">
+                      <input
+                        id="site"
+                        name="site"
+                        type="text"
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                        onChange={(e) => setSite(e.target.value)}
+                        value={site}
+                      />
+                    </div>
+                  </div>
+                  <div className='hidden'>
+                    <div className="sm:col-span-2 col-span-6">
+                      <label htmlFor="cidade" className="block text-sm/6 font-medium text-gray-900">
+                        Cidade
+                      </label>
+                      <div className="mt-2">
+                        <input
+                          id="cidade"
+                          name="cidade"
+                          type="text"
+                          className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                          onChange={(e) => setCidade(e.target.value)}
+                          value={cidade}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )
+            }
+            {
+              !internet && (
+                <>
+                <div className='sm:col-span-full mt-3 w-60'>
+                  <h2 className="text-base/7 font-semibold text-gray-900">Endereço</h2>
+                </div>
 
-            <div className="sm:col-span-2 col-span-6">
-              <label htmlFor="cidade" className="block text-sm/6 font-medium text-gray-900">
-                Cidade
-              </label>
-              <div className="mt-2">
-                <input
-                  id="cidade"
-                  name="cidade"
-                  type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setCidade(e.target.value)}
-                  value={cidade}
-                />
-              </div>
-            </div>
+                <div className="sm:col-span-2 col-span-6">
+                  <label htmlFor="endereco" className="block text-sm/6 font-medium text-gray-900">
+                    Endereço
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="endereco"
+                      name="endereco"
+                      type="text"
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                      onChange={(e) => setEndereco(e.target.value)}
+                      value={endereco}
+                    />
+                  </div>
+                </div>
 
-            <div className="sm:col-span-2 col-span-6">
-              <label htmlFor="cep" className="block text-sm/6 font-medium text-gray-900">
-                CEP
-              </label>
-              <div className="mt-2">
-                <IMaskInput
-                  mask="00000-000"
-                  id="cep"
-                  name="cep"
-                  type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onAccept={(value) => setCep(value)}
-                  value={cep}
-                />
-              </div>
-            </div>
+                <div className="sm:col-span-2 col-span-6">
+                  <label htmlFor="bairro" className="block text-sm/6 font-medium text-gray-900">
+                    Bairro
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="bairro"
+                      name="bairro"
+                      type="text"
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                      onChange={(e) => setBairro(e.target.value)}
+                      value={bairro}
+                    />
+                  </div>
+                </div>
 
-            <div className="sm:col-span-2 col-span-6">
-              <label htmlFor="numero" className="block text-sm/6 font-medium text-gray-900">
-                Número
-              </label>
-              <div className="mt-2">
-                <IMaskInput
-                  mask="00000"
-                  id="numero"
-                  name="numero"
-                  type="text"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onAccept={(value) => setNumero(value)}
-                  value={numero}
-                />
-              </div>
-            </div>
+                <div className="sm:col-span-2 col-span-6">
+                  <label htmlFor="cidade" className="block text-sm/6 font-medium text-gray-900">
+                    Cidade
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="cidade"
+                      name="cidade"
+                      type="text"
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                      onChange={(e) => setCidade(e.target.value)}
+                      value={cidade}
+                    />
+                  </div>
+                </div>
 
-            <div className="sm:col-span-2 col-span-6">
-              <label htmlFor="complemento" className="block text-sm/6 font-medium text-gray-900">
-                Complemento
-              </label>
-              <div className="mt-2">
-                <input
-                  id="complemento"
-                  name="complemento"
-                  type="text"
-                  autoComplete="postal-code"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setComplemento(e.target.value)}
-                  value={complemento}
-                />
-              </div>
-            </div>
+                <div className="sm:col-span-2 col-span-6">
+                  <label htmlFor="cep" className="block text-sm/6 font-medium text-gray-900">
+                    CEP
+                  </label>
+                  <div className="mt-2">
+                    <IMaskInput
+                      mask="00000-000"
+                      id="cep"
+                      name="cep"
+                      type="text"
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                      onAccept={(value) => setCep(value)}
+                      value={cep}
+                    />
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2 col-span-6">
+                  <label htmlFor="numero" className="block text-sm/6 font-medium text-gray-900">
+                    Número
+                  </label>
+                  <div className="mt-2">
+                    <IMaskInput
+                      mask="00000"
+                      id="numero"
+                      name="numero"
+                      type="text"
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                      onAccept={(value) => setNumero(value)}
+                      value={numero}
+                    />
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2 col-span-6">
+                  <label htmlFor="complemento" className="block text-sm/6 font-medium text-gray-900">
+                    Complemento
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="complemento"
+                      name="complemento"
+                      type="text"
+                      autoComplete="postal-code"
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                      onChange={(e) => setComplemento(e.target.value)}
+                      value={complemento}
+                    />
+                  </div>
+                </div>
+                
+                </>
+              )
+            }
 
             <div className="col-span-6">
               <label htmlFor="descricao" className="block text-sm/6 font-medium text-gray-900">

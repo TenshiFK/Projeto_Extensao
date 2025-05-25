@@ -26,7 +26,7 @@ interface MovimentacaoEstoque {
   id?: string;
   produtoId: string;
   produtoNome: string;
-  tipo: 'Entrada' | 'Saída';
+  tipo: 'Entrada' | 'Saída' | 'Compra';
   quantidade: number;
   data: string;
   origem: string;
@@ -125,7 +125,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
           produtoId: docRef.id,
           produtoNome: nomeProduto,
           quantidade: parseInt(quantidade),
-          tipo: 'Entrada',
+          tipo: 'Compra',
           data: new Date().toISOString(),
           origem: 'Produtos',
           origemId: docRef.id,
@@ -188,7 +188,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="nomeProduto" className="block text-sm/6 font-medium text-gray-900">
                 Nome do Produto
-                <span className='text-red-500 ml-1 text-base'>*</span>
+                <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <input
@@ -207,7 +207,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="valor" className="block text-sm/6 font-medium text-gray-900">
                 Valor do Produto
-                <span className='text-red-500 ml-1 text-base'>*</span>
+                <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <IMaskInput
@@ -233,7 +233,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="dataCompra" className="block text-sm/6 font-medium text-gray-900">
                 Data de Compra
-                <span className='text-red-500 ml-1 text-base'>*</span>
+                <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <input
@@ -268,7 +268,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="quantidade" className="block text-sm/6 font-medium text-gray-900">
                 Quantidade
-                <span className='text-red-500 ml-1 text-base'>*</span>
+                <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <IMaskInput

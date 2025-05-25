@@ -1,11 +1,6 @@
 import Image from 'next/image';
 import Img1 from '../../assets/imgs/img.png';
 
-export const metadata = {
-  title: 'Home',
-  description: 'Home page da aplicação',
-};
-
 
 export default function Page() {
 

@@ -12,6 +12,7 @@ interface Fornecedor {
   nomeFornecedor: string,
   email?: string,
   telefone: string,
+  site?: string,
   endereco?: string,
   bairro?: string,
   cidade?: string,
@@ -132,87 +133,109 @@ export default function FornecedorDetalhes() {
               </div>
             </div>
 
-            <div className='sm:col-span-full mt-3 w-60'>
-              <h2 className="text-base/7 font-semibold text-gray-900">Endereço</h2>
-            </div>
-
-            <div className="sm:col-span-2 col-span-6">
-              <p className="block text-sm/6 font-medium text-gray-900">
-                Endereço
-              </p>
-              <div className="mt-2">
-                <div
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
-                >
-                  {fornecedor.endereco || " - "}
+            {
+              fornecedor.cidade === "Internet" && (
+                <div className="sm:col-span-6 col-span-6">
+                  <p className="block text-sm/6 font-medium text-gray-900">
+                    Site
+                  </p>
+                  <div className="mt-2">
+                    <div
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                    >
+                      {fornecedor.site || " - "}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              )
+            }
+            {
+              fornecedor.cidade !== "Internet" && (
+                <>
+                  <div className='sm:col-span-full mt-3 w-60'>
+                    <h2 className="text-base/7 font-semibold text-gray-900">Endereço</h2>
+                  </div>
 
-            <div className="sm:col-span-2 col-span-6">
-              <p className="block text-sm/6 font-medium text-gray-900">
-                Bairro
-              </p>
-              <div className="mt-2">
-                <div
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
-                >
-                  {fornecedor.bairro || " - "}
-                </div>
-              </div>
-            </div>
+                  <div className="sm:col-span-2 col-span-6">
+                    <p className="block text-sm/6 font-medium text-gray-900">
+                      Endereço
+                    </p>
+                    <div className="mt-2">
+                      <div
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                      >
+                        {fornecedor.endereco || " - "}
+                      </div>
+                    </div>
+                  </div>
 
-            <div className="sm:col-span-2 col-span-6">
-              <p className="block text-sm/6 font-medium text-gray-900">
-                Cidade
-              </p>
-              <div className="mt-2">
-                <div
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
-                >
-                  {fornecedor.cidade || " - "}
-                </div>
-              </div>
-            </div>
+                  <div className="sm:col-span-2 col-span-6">
+                    <p className="block text-sm/6 font-medium text-gray-900">
+                      Bairro
+                    </p>
+                    <div className="mt-2">
+                      <div
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                      >
+                        {fornecedor.bairro || " - "}
+                      </div>
+                    </div>
+                  </div>
 
-            <div className="sm:col-span-2 col-span-6">
-              <p className="block text-sm/6 font-medium text-gray-900">
-                CEP
-              </p>
-              <div className="mt-2">
-                <div
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
-                >
-                  {fornecedor.cep || " - "}
-                </div>
-              </div>
-            </div>
+                  <div className="sm:col-span-2 col-span-6">
+                    <p className="block text-sm/6 font-medium text-gray-900">
+                      Cidade/Internet
+                    </p>
+                    <div className="mt-2">
+                      <div
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                      >
+                        {fornecedor.cidade || " - "}
+                      </div>
+                    </div>
+                  </div>
 
-            <div className="sm:col-span-2 col-span-6">
-              <p className="block text-sm/6 font-medium text-gray-900">
-                Número
-              </p>
-              <div className="mt-2">
-                <div
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
-                >
-                  {fornecedor.numero || " - "}
-                </div>
-              </div>
-            </div>
+                  <div className="sm:col-span-2 col-span-6">
+                    <p className="block text-sm/6 font-medium text-gray-900">
+                      CEP
+                    </p>
+                    <div className="mt-2">
+                      <div
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                      >
+                        {fornecedor.cep || " - "}
+                      </div>
+                    </div>
+                  </div>
 
-            <div className="sm:col-span-2 col-span-6">
-              <p className="block text-sm/6 font-medium text-gray-900">
-                Complemento
-              </p>
-              <div className="mt-2">
-                <div
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
-                >
-                  {fornecedor.complemento || " - "}
-                </div>
-              </div>
-            </div>
+                  <div className="sm:col-span-2 col-span-6">
+                    <p className="block text-sm/6 font-medium text-gray-900">
+                      Número
+                    </p>
+                    <div className="mt-2">
+                      <div
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                      >
+                        {fornecedor.numero || " - "}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="sm:col-span-2 col-span-6">
+                    <p className="block text-sm/6 font-medium text-gray-900">
+                      Complemento
+                    </p>
+                    <div className="mt-2">
+                      <div
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
+                      >
+                        {fornecedor.complemento || " - "}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )
+            }
 
             <div className="col-span-6">
               <p className="block text-sm/6 font-medium text-gray-900">

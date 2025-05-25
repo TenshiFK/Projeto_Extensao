@@ -13,6 +13,7 @@ interface Fornecedor {
   nomeFornecedor: string;
   email?: string;
   telefone: string;
+  site?: string;
   endereco?: string;
   bairro?: string;
   cidade?: string;

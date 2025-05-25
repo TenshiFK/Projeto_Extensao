@@ -174,7 +174,7 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
             <div className="sm:col-span-3 col-span-6">
               <label htmlFor="titulo" className="block text-sm/6 font-medium text-gray-900">
                 Título
-                <span className='text-red-500 ml-1 text-base'>*</span>
+                <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <input
@@ -224,7 +224,7 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="dataCriacao" className="block text-sm/6 font-medium text-gray-900">
                 Data de Criação
-                <span className='text-red-500 ml-1 text-base'>*</span>
+                <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <input
@@ -440,7 +440,7 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
             <div className="sm:col-span-2 col-span-6">
               <label htmlFor="complemento" className="block text-sm/6 font-medium text-gray-900">
                 Valor Total
-              <span className='text-red-500 ml-1 text-base'>*</span>
+              <span className='text-red-500 ml-1 text-lg'>*</span>
               </label>
               <div className="mt-2">
                 <IMaskInput
