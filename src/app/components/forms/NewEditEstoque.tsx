@@ -32,7 +32,6 @@ interface MovimentacaoEstoque {
   origem: string;
   origemId: string;
 
-  observacoes?: string;
 }
 
 interface Props {

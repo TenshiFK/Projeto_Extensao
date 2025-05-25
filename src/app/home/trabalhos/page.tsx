@@ -291,6 +291,11 @@ const exportarPDF = async (clienteId?: string) => {
   const paginatedTrabalhos = paginate(filteredTrabalhos, currentPage, perPage);
   const totalPages = Math.ceil(filteredTrabalhos.length / perPage);
 
+  const uniqueClientes = Array.from(
+  new Map(trabalhos.map((t) => [t.idCliente, { idCliente: t.idCliente, nome: t.nome }]))
+    .values()
+  );
+
   return (
     <main>
       <div className="grid lg:grid-cols-6 gap-4">
@@ -356,7 +361,7 @@ const exportarPDF = async (clienteId?: string) => {
         onClose={closeModalPDF}
         onConfirm={exportarPDF}
         isTrabalhos={true}
-        clientes={trabalhos}
+        clientes={uniqueClientes}
       />
     </main>
   );
