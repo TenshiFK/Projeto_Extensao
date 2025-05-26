@@ -353,7 +353,8 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                   value={garantia}
                 >
                   <option>Selecione</option>
-                  <option>1 meses</option>
+                  <option>1 mês</option>
+                  <option>2 meses</option>
                   <option>3 meses</option>
                   <option>6 meses</option>
                   <option>1 ano</option>
@@ -381,6 +382,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                   <option>Finalizado</option>
                   <option>Em andamento</option>
                   <option>Apenas Orçado</option>
+                  <option>Garantia</option>
                 </select>
                 <ChevronDownIcon
                   aria-hidden="true"
@@ -571,6 +573,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                   <option>Cartão de Débito</option>
                   <option>Transferência</option>
                   <option>Pix</option>
+                  <option>Garantia</option>
                 </select>
                 <ChevronDownIcon
                   aria-hidden="true"
@@ -595,6 +598,7 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                   <option>Finalizado</option>
                   <option>Em andamento</option>
                   <option>Apenas Orçado</option>
+                  <option>Garantia</option>
                 </select>
                 <ChevronDownIcon
                   aria-hidden="true"

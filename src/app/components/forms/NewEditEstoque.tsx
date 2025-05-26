@@ -126,7 +126,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
           produtoNome: nomeProduto,
           quantidade: parseInt(quantidade),
           tipo: 'Compra',
-          data: new Date().toISOString(),
+          data: dataCompra,
           origem: 'Produtos',
           origemId: docRef.id,
         });

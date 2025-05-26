@@ -6,10 +6,8 @@ export const metadata = {
   title: 'Novo Cliente',
 };
 
-
 export default function Page() {
   
-
     return (
       <main>
         <div className="mb-4">

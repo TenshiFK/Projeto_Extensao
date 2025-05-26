@@ -1,10 +1,6 @@
 import SideNav from "../components/SideNav";
 import PrivateRoute from "../components/private/PrivateRoute";
 
-export const metadata = {
-  title: 'Home',
-  description: 'Home page da aplicação',
-};
  
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
