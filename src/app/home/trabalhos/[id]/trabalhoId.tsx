@@ -26,6 +26,7 @@ interface Trabalho {
   produtos?: {
     produto: string;
     quantidade: string;
+    unidadeMedida?: string;
   }[];
   outros?: string;
   valorFrete?: string;
@@ -249,7 +250,7 @@ export default function TrabalhoDetalhes() {
                       {trabalho.produtos?.map((item, index) => (
                           <tr key={index} className="border border-gray-950 bg-third-white">
                             <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.produto}</td>
-                            <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.quantidade}</td>
+                            <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.quantidade} {item.unidadeMedida}</td>
                           </tr>
                       ))}
                       </tbody>

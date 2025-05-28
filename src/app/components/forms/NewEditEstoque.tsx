@@ -15,6 +15,7 @@ interface Produto {
   dataCompra: string;
   localCompra?: string;
   quantidade: string;
+  unidadeMedida?: string;
   fornecedor?: {
     id: string;
     nomeFornecedor: string;
@@ -30,8 +31,7 @@ interface MovimentacaoEstoque {
   quantidade: number;
   data: string;
   origem: string;
-  origemId: string;
-
+  unidadeMedida?: string;
 }
 
 interface Props {
@@ -44,6 +44,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
   const [dataCompra, setDataCompra] = useState('');
   const [localCompra, setLocalCompra] = useState('');
   const [quantidade, setQuantidade] = useState('');
+  const [unidadeMedida, setUnidadeMedida] = useState('');
   const [fornecedor, setFornecedor] = useState<{ id: string; nomeFornecedor: string }>({ id: '', nomeFornecedor: '' });
   const [descricao, setDescricao] = useState('');
   const [fornecedoresDisponiveis, setFornecedoresDisponiveis] = useState<{ id: string; nomeFornecedor: string }[]>([]);
@@ -53,6 +54,8 @@ export default function NewEditProdutoForm({ produto }: Props) {
     dataCompra: false,
     quantidade: false,
   });
+
+  const [passo, setPasso] = useState("1"); 
 
   const { id } = useParams();
   const router = useRouter();
@@ -92,6 +95,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
       dataCompra,
       localCompra,
       quantidade,
+      unidadeMedida,
       fornecedor,
     };
 
@@ -101,8 +105,8 @@ export default function NewEditProdutoForm({ produto }: Props) {
         await updateDoc(docRef, dados);
         toast.success('Produto atualizado com sucesso!');
 
-        const quantidadeAntiga = parseInt(produto.quantidade);
-        const quantidadeNova = parseInt(quantidade);
+        const quantidadeAntiga = parseFloat(produto.quantidade);
+        const quantidadeNova = parseFloat(quantidade);
         const diferenca = quantidadeNova - quantidadeAntiga;
 
         if (diferenca !== 0) {
@@ -112,8 +116,8 @@ export default function NewEditProdutoForm({ produto }: Props) {
             quantidade: Math.abs(diferenca),
             tipo: diferenca > 0 ? 'Entrada' : 'Saída',
             data: new Date().toISOString(),
-            origem: 'Produtos',
-            origemId: id as string,
+            origem: 'Edição de Produtos',
+            unidadeMedida: unidadeMedida || "",
           });
         }
       } else {
@@ -127,8 +131,8 @@ export default function NewEditProdutoForm({ produto }: Props) {
           quantidade: parseInt(quantidade),
           tipo: 'Compra',
           data: dataCompra,
-          origem: 'Produtos',
-          origemId: docRef.id,
+          origem: 'Criação de Produtos',
+          unidadeMedida: unidadeMedida || "",
         });
       }
 
@@ -137,6 +141,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
       setDataCompra('');
       setLocalCompra('');
       setQuantidade('');
+      setUnidadeMedida('');
       setFornecedor({ id: '', nomeFornecedor: '' });
       setDescricao('');
 
@@ -173,6 +178,7 @@ export default function NewEditProdutoForm({ produto }: Props) {
       setDataCompra(produto.dataCompra);
       setLocalCompra(produto.localCompra || '');
       setQuantidade(produto.quantidade);
+      setUnidadeMedida(produto.unidadeMedida || '');
       setFornecedor(produto.fornecedor || { id: '', nomeFornecedor: '' });
     }
   }, [produto]);
@@ -266,25 +272,6 @@ export default function NewEditProdutoForm({ produto }: Props) {
             </div>
 
             <div className="sm:col-span-2 col-span-6">
-              <label htmlFor="quantidade" className="block text-sm/6 font-medium text-gray-900">
-                Quantidade
-                <span className='text-red-500 ml-1 text-lg'>*</span>
-              </label>
-              <div className="mt-2">
-                <IMaskInput
-                  mask={Number}
-                  id="quantidade"
-                  name="quantidade"
-                  className={`block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
-                    errors.quantidade ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
-                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
-                  onAccept={(value) => setQuantidade(value)}
-                  value={quantidade}
-                />
-              </div>
-            </div>
-
-            <div className="sm:col-span-2 col-span-6">
               <label htmlFor="fornecedores" className="block text-sm/6 font-medium text-gray-900">
                 Fornecedores
               </label>
@@ -308,6 +295,90 @@ export default function NewEditProdutoForm({ produto }: Props) {
                       {fornecedor.nomeFornecedor}
                     </option>
                   ))}
+                </select>
+                <ChevronDownIcon
+                  aria-hidden="true"
+                  className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+                />
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 md:col-span-3 col-span-6">
+              <label htmlFor="quantidade" className="block text-sm/6 font-medium text-gray-900">
+                Quantidade
+                <span className='text-red-500 ml-1 text-lg'>*</span>
+              </label>
+
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = parseInt(quantidade) || 0;
+                    const stepVal = parseInt(passo) || 1;
+                    const newQtd = Math.max(current - stepVal, 0);
+                    setQuantidade(newQtd.toString());
+                  }}
+                  className="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700"
+                >
+                  -
+                </button>
+
+                <input
+                  id="quantidade"
+                  name="quantidade"
+                  type="text"
+                  className={`block xl:w-auto lg:w-20 w-24 rounded-md bg-white px-3 py-1.5 text-base text-gray-900 ${
+                    errors.quantidade ? 'border border-red-500' : 'outline-gray-300 outline-1 -outline-offset-1'
+                  } placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6`}
+                  onChange={(e) => setQuantidade(e.target.value)}
+                  value={quantidade}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = parseInt(quantidade) || 0;
+                    const stepVal = parseInt(passo) || 1;
+                    const newQtd = current + stepVal;
+                    setQuantidade(newQtd.toString());
+                  }}
+                  className="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700"
+                >
+                  +
+                </button>
+
+                <input
+                  id="passo"
+                  name="passo"
+                  type="number"
+                  min="1"
+                  className="w-16 rounded-md bg-white px-2 py-1.5 text-base text-gray-900 outline-gray-300 outline-1 -outline-offset-1 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  onChange={(e) => setPasso(e.target.value)}
+                  value={passo}
+                  placeholder="Passo"
+                />
+              </div>
+            </div>
+
+            {/* <div className='sm:block hidden'/> */}
+
+            <div className="lg:col-span-2 sm:col-span-4 col-span-6">
+              <label htmlFor="unidadeMedida" className="block text-sm/6 font-medium text-gray-900">
+                Unidade de Medida
+              </label>
+              <div className="mt-2 grid grid-cols-1">
+                <select
+                  id="unidadeMedida"
+                  name="unidadeMedida"
+                  className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  onChange={(e) => setUnidadeMedida(e.target.value)}
+                  value={unidadeMedida}
+                >
+                  <option>Selecione</option>
+                  <option>und.</option>
+                  <option>gramas</option>
+                  <option>litros</option>
+                  <option>metros</option>
                 </select>
                 <ChevronDownIcon
                   aria-hidden="true"

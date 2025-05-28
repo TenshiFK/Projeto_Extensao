@@ -28,12 +28,11 @@ interface MovimentacaoEstoque {
   id?: string;
   produtoId: string;
   produtoNome: string;
-  tipo: 'Entrada' | 'Saída' | 'Exclusão';
+  tipo:'Exclusão';
   quantidade: number;
+  unidadeMedida?: string;
   data: string;
   origem: string;
-
-  observacoes?: string;
 }
 
 export default function Estoque() {
@@ -111,7 +110,7 @@ export default function Estoque() {
             id: doc.id,
             nomeProduto: data.nomeProduto || "Não informado",
             valor: data.valor || "Não informado",
-            quantidade: data.quantidade || "Não informado",
+            quantidade: data.quantidade + " " + data.unidadeMedida || "Não informado",
             nomeFornecedor: data.fornecedor?.nomeFornecedor || "Não informado",
             dataCompra: data.dataCompra
             ? data.dataCompra.split("-").reverse().join("/")
@@ -250,20 +249,21 @@ export default function Estoque() {
           const data = doc.data();
           const movimentacao: MovimentacaoEstoque = {
             id: doc.id,
-            produtoId: data.produtoId || "Não informado",
-            produtoNome: data.produtoNome || "Não informado",
-            tipo: data.tipo || "Não informado",
+            produtoId: data.produtoId || " - ",
+            produtoNome: data.produtoNome || " - ",
+            tipo: data.tipo || " - ",
             quantidade: data.quantidade || 0,
             data: data.data 
               ? data.data.split("T")[0].split("-").reverse().join("/")
-              : "Não informado",
-            origem: data.origem || "Não informado",
+              : " - ",
+            origem: data.origem || " - ",
+            unidadeMedida: data.unidadeMedida || "",
           };
           historicoData.push(movimentacao);
         });
 
         if (historicoData.length === 0) {
-          toast.info("Nenhum produto encontrado")
+          toast.info("Nenhum historico encontrado")
           return;
         }
 
@@ -311,7 +311,7 @@ export default function Estoque() {
                         ...historicoData.map((produto) => [
                           produto.produtoNome || ' - ',
                           produto.tipo || ' - ',
-                          produto.quantidade !== undefined ? produto.quantidade : ' - ',
+                          produto.quantidade !== undefined ? produto.quantidade+""+produto.unidadeMedida : ' - ',
                           produto.data || ' - ',
                         ]),
                       ]
@@ -385,7 +385,7 @@ export default function Estoque() {
             id: doc.id,
             nomeProduto: data.nomeProduto ?? "",
             valor: data.valor ?? "",
-            quantidade: data.quantidade ?? "",
+            quantidade: (data.quantidade ?? "") + " " + (data.unidadeMedida ?? ""),
             dataCompra:
               data.dataCompra && data.dataCompra !== "Não informado"
                 ? data.dataCompra.split("-").reverse().join("/")
@@ -415,9 +415,10 @@ export default function Estoque() {
             produtoId: produto.id, 
             produtoNome: produto.nomeProduto, 
             quantidade: parseInt(produto.quantidade),
+            unidadeMedida: produto.quantidade.split(" ")[1] || "",
             tipo: 'Exclusão',
             data: new Date().toISOString(),
-            origem:'Produtos',
+            origem:'Listagem de Produtos',
         });
         }
         toast.success("Produto excluído com sucesso!");
@@ -497,6 +498,13 @@ export default function Estoque() {
       </div>
 
       <div className="mt-16">
+        <div className="flex justify-end items-center mb-4">
+          <Link href="/home/estoque/historico">
+            <button className="flex items-center gap-2 bg-main-blue text-main-white lg:text-base text-sm font-semibold py-2 px-4 rounded-[30px] cursor-pointer">
+              Histórico de Movimentações
+            </button>
+          </Link>
+        </div>
         {filteredProdutos.length === 0 ? (
           <div className="h-screen md:h-100 text-center text-gray-500 text-lg py-10 justify-center items-center flex">
             Nada por aqui ainda!

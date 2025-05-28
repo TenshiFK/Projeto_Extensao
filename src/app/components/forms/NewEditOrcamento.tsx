@@ -17,7 +17,8 @@ interface Orcamento {
   garantia: string;
   descricao: string;
   solucao: string;
-  produtos?: {produto: string; quantidade: string;}[];
+  produtos?: {produto: string; quantidade: string; unidadeMedida: string}[];
+  unidadeMedida?: string;
   outros?: string;
   valorFrete?: string;
   valorTotal: string;
@@ -36,10 +37,11 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
   const [solucao, setSolucao] = useState('');
   const [produtos, setProdutos] = useState('');
   const [quantidadeProdutos, setQuantidadeProdutos] = useState('');
+  const [unidadeMedida, setUnidadeMedida] = useState('');
   const [outros, setOutros] = useState('');
   const [valorFrete, setValorFrete] = useState('');
   const [valorTotal, setValorTotal] = useState('');
-  const [listaProdutos, setListaProdutos] = useState<{ produto: string; quantidade: string }[]>([]);
+  const [listaProdutos, setListaProdutos] = useState<{ produto: string; quantidade: string; unidadeMedida: string }[]>([]);
 
   const [clientesDisponiveis, setClientesDisponiveis] = useState<{ id: string; nome: string }[]>([]);
   const [produtosDisponiveis, setProdutosDisponiveis] = useState<{ id: string; nomeProduto: string }[]>([]);
@@ -107,6 +109,7 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
       setValorFrete('');
       setValorTotal('');
       setListaProdutos([]);
+      setUnidadeMedida('');
 
     } catch (error) {
       console.error('Erro ao salvar os dados:', error);
@@ -345,14 +348,40 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
               </div>
             </div>
 
+            <div className="lg:col-span-2 sm:col-span-4 col-span-6">
+              <label htmlFor="unidadeMedida" className="block text-sm/6 font-medium text-gray-900">
+                Unidade de Medida
+              </label>
+              <div className="mt-2 grid grid-cols-1">
+                <select
+                  id="unidadeMedida"
+                  name="unidadeMedida"
+                  className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  onChange={(e) => setUnidadeMedida(e.target.value)}
+                  value={unidadeMedida}
+                >
+                  <option>Selecione</option>
+                  <option>und.</option>
+                  <option>gramas</option>
+                  <option>litros</option>
+                  <option>metros</option>
+                </select>
+                <ChevronDownIcon
+                  aria-hidden="true"
+                  className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+                />
+              </div>
+            </div>
+
             <div className="sm:col-span-1 col-span-6 flex items-end">
               <button
                 type="button"
                 onClick={() => {
                   if (produtos && quantidadeProdutos) {
-                    setListaProdutos([...listaProdutos, { produto: produtos, quantidade: quantidadeProdutos }]);
+                    setListaProdutos([...listaProdutos, { produto: produtos, quantidade: quantidadeProdutos, unidadeMedida: unidadeMedida }]);
                     setProdutos('');
                     setQuantidadeProdutos('');
+                    setUnidadeMedida('');
                   }
                 }}
                 className='bg-main-blue text-main-white rounded-md px-3 py-2 text-sm font-semibold shadow-xs hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
@@ -377,7 +406,7 @@ export default function NewEditOrcamentoForm({ orcamento }: Props) {
                       {listaProdutos.map((item, index) => (
                         <tr key={index} className="border border-gray-950 bg-third-white">
                           <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.produto}</td>
-                          <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.quantidade}</td>
+                          <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.quantidade} {item.unidadeMedida}</td>
                           <td className='border border-gray-950 px-1 py-1 bg-third-white text-center'>
                             <button
                               type="button"

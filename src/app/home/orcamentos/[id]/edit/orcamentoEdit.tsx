@@ -22,6 +22,7 @@ interface Orcamento {
   produtos?: {
     produto: string;
     quantidade: string;
+    unidadeMedida: string;
   }[];
   outros?: string;
   valorFrete?: string;

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import { collection, doc, addDoc, updateDoc, getDocs } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, getDocs, getDoc } from 'firebase/firestore';
 import { db } from '@/app/services/firebase/firebaseconfig';
 import { IMaskInput } from 'react-imask';
 
@@ -18,12 +18,23 @@ interface Trabalho {
   dataCriacao: string;
   garantia: string;
   statusOrdem: string;
-  produtos?: { produto: string; quantidade: string }[];
+  produtos?: {id:string; produto: string; quantidade: string; unidadeMedida: string}[];
   outros?: string;
   valorFrete?: string;
   valorTotal: string;
   pagamento: string;
   statusPagamento: string;
+}
+
+interface MovimentacaoEstoque {
+  id?: string;
+  produtoId: string;
+  produtoNome: string;
+  tipo: 'Saída' | 'Entrada' | 'Restauração';
+  quantidade: number;
+  data: string;
+  origem: string;
+  unidadeMedida?: string;
 }
 
 interface Props {
@@ -40,19 +51,21 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
   const [dataCriacao, setDataCriacao] = useState('');
   const [garantia, setGarantia] = useState('');
   const [statusOrdem, setStatusOrdem] = useState('');
-  const [produtos, setProdutos] = useState('');
+  const [produtos, setProdutos] = useState({ id: '', produto: '' });
   const [quantidadeProdutos, setQuantidadeProdutos] = useState('');
+  const [unidadeMedida, setUnidadeMedida] = useState('');
   const [outros, setOutros] = useState('');
   const [valorFrete, setValorFrete] = useState('');
   const [valorTotal, setValorTotal] = useState('');
   const [pagamento, setPagamento] = useState('');
   const [statusPagamento, setStatusPagamento] = useState('');
-  const [listaProdutos, setListaProdutos] = useState<{ produto: string; quantidade: string }[]>([]);
+  const [listaProdutos, setListaProdutos] = useState<{id:string; produto: string; quantidade: string; unidadeMedida: string}[]>([]);
 
   const [clientesDisponiveis, setClientesDisponiveis] = useState<{ id: string; nome: string }[]>([]);
-  const [produtosDisponiveis, setProdutosDisponiveis] = useState<{ id: string; nomeProduto: string }[]>([]);
+  const [produtosDisponiveis, setProdutosDisponiveis] = useState<{ id: string; nomeProduto: string; quantidade: string; unidadeMedida: string; }[]>([]);
   const [orcamentosDisponiveis, setOrcamentosDisponiveis] = useState<{ id: string; titulo: string; cliente: string }[]>([]);
-
+  
+  const [estoqueInvalido, setEstoqueInvalido] = useState<string[]>([]);
   const [errors, setErrors] = useState({
     titulo: false,
     dataCriacao: false,
@@ -62,41 +75,141 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
   const { id } = useParams();
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const newErrors = {
-      titulo: titulo.trim() === '',
-      dataCriacao: dataCriacao.trim() === '',
-      valorTotal: valorTotal.trim() === '',
-    };
-
-    setErrors(newErrors);
-
-    if (Object.values(newErrors).some(Boolean)) {
-      toast.error('Preencha todos os campos obrigatórios!');
-      return;
-    }
-
-    const dados = {
-      titulo,
-      cliente,
-      orcamento,
-      descricao,
-      solucao,
-      dataCriacao,
-      garantia,
-      statusOrdem,
-      produtos: listaProdutos,
-      outros,
-      valorFrete,
-      valorTotal,
-      pagamento,
-      statusPagamento,
-    };
-
+  const registrarMovimentacaoEstoque = async (movimentacao: MovimentacaoEstoque) => {
     try {
-      if (trabalho && id) {
+      const movimentacoesRef = collection(db, 'DadosEstoque');
+      await addDoc(movimentacoesRef, movimentacao);
+      console.log('Movimentação registrada com sucesso');
+    } catch (error) {
+      console.error('Erro ao registrar movimentação:', error);
+      toast.error('Erro ao registrar movimentação de estoque.');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const newErrors = {
+    titulo: titulo.trim() === '',
+    dataCriacao: dataCriacao.trim() === '',
+    valorTotal: valorTotal.trim() === '',
+  };
+
+  setErrors(newErrors);
+
+  if (Object.values(newErrors).some(Boolean)) {
+    toast.error('Preencha todos os campos obrigatórios!');
+    return;
+  }
+
+  if (trabalho && id) {
+    if (trabalho.produtos && trabalho.produtos.length > 0) {
+      for (const item of trabalho.produtos) {
+        const produtoRef = produtosDisponiveis.find(p => p.nomeProduto === item.produto);
+        if (produtoRef) {
+          const produtoDocRef = doc(db, 'Produtos', produtoRef.id);
+          const produtoSnapshot = await getDoc(produtoDocRef);
+
+          if (produtoSnapshot.exists()) {
+            const quantidadeAtual = parseFloat(produtoSnapshot.data().quantidade);
+            const quantidadeAnterior = parseFloat(item.quantidade);
+            const novaQuantidade = quantidadeAtual + quantidadeAnterior;
+
+            await updateDoc(produtoDocRef, {
+              quantidade: novaQuantidade.toString(),
+            });
+
+            await registrarMovimentacaoEstoque({
+              produtoId: item.id,
+              produtoNome: item.produto,
+              quantidade: quantidadeAnterior,
+              tipo: 'Restauração',
+              data: new Date().toISOString(),
+              origem: 'Edição de Trabalho Realizado',
+              unidadeMedida: item.unidadeMedida || '',
+            });
+          }
+        }
+      }
+    }
+  }
+
+  const produtosComErro: string[] = [];
+
+  for (const item of listaProdutos) {
+    const produtoRef = produtosDisponiveis.find(p => p.nomeProduto === item.produto);
+    if (produtoRef) {
+      const produtoDocRef = doc(db, 'Produtos', produtoRef.id);
+      const produtoSnapshot = await getDoc(produtoDocRef);
+
+      if (produtoSnapshot.exists()) {
+        const quantidadeAtual = parseFloat(produtoSnapshot.data().quantidade);
+        const quantidadeUsada = parseFloat(item.quantidade);
+
+        if (quantidadeAtual < quantidadeUsada) {
+          produtosComErro.push(item.produto);
+        }
+      }
+    }
+  }
+
+  if (produtosComErro.length > 0) {
+    setEstoqueInvalido(produtosComErro);
+    toast.error('Estoque insuficiente para os produtos selecionados.');
+    return;
+  } else {
+    setEstoqueInvalido([]);
+  }
+
+  for (const item of listaProdutos) {
+    const produtoRef = produtosDisponiveis.find(p => p.nomeProduto === item.produto);
+    if (produtoRef) {
+      const produtoDocRef = doc(db, 'Produtos', produtoRef.id);
+      const produtoSnapshot = await getDoc(produtoDocRef);
+
+      if (produtoSnapshot.exists()) {
+        const quantidadeAtual = parseFloat(produtoSnapshot.data().quantidade);
+        const quantidadeUsada = parseFloat(item.quantidade);
+
+        const novaQuantidade = quantidadeAtual - quantidadeUsada;
+
+        await registrarMovimentacaoEstoque({
+          produtoId: item.id,
+          produtoNome: item.produto,
+          quantidade: Math.abs(quantidadeUsada),
+          tipo: 'Saída',
+          data: (trabalho && id) ? new Date().toISOString() : dataCriacao,
+          origem: 'Trabalhos Realizados',
+          unidadeMedida: item.unidadeMedida || '',
+        });
+      
+
+        await updateDoc(produtoDocRef, {
+          quantidade: novaQuantidade.toString(),
+        });
+      }
+    }
+  }
+
+  const dados = {
+    titulo,
+    cliente,
+    orcamento,
+    descricao,
+    solucao,
+    dataCriacao,
+    garantia,
+    statusOrdem,
+    produtos: listaProdutos,
+    outros,
+    valorFrete,
+    valorTotal,
+    pagamento,
+    statusPagamento,
+  };
+
+  try {
+    if (trabalho && id) {
       const trabalhoRef = doc(db, 'Trabalhos', id as string);
       await updateDoc(trabalhoRef, dados);
       toast.success('Trabalho atualizado com sucesso!');
@@ -105,29 +218,31 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
       await addDoc(trabalhosRef, dados);
       toast.success('Trabalho cadastrado com sucesso!');
     }
-      setTitulo('');
-      setCliente({ id: '', nome: '' });
-      setOrcamento({ id: '', titulo: '' });
-      setDescricao('');
-      setSolucao('');
-      setDataCriacao('');
-      setGarantia('');
-      setStatusOrdem('');
-      setProdutos('');
-      setQuantidadeProdutos('');
-      setOutros('');
-      setValorFrete('');
-      setValorTotal('');
-      setPagamento('');
-      setStatusPagamento('');
-      setListaProdutos([]);
 
-      router.push('/home/trabalhos');
-    } catch (error) {
-      console.error('Erro ao salvar os dados:', error);
-      toast.error('Erro ao salvar os dados.');
-    }
-  };
+    setTitulo('');
+    setCliente({ id: '', nome: '' });
+    setOrcamento({ id: '', titulo: '' });
+    setDescricao('');
+    setSolucao('');
+    setDataCriacao('');
+    setGarantia('');
+    setStatusOrdem('');
+    setProdutos({ id: '', produto: '' });
+    setQuantidadeProdutos('');
+    setOutros('');
+    setValorFrete('');
+    setValorTotal('');
+    setPagamento('');
+    setStatusPagamento('');
+    setListaProdutos([]);
+    setUnidadeMedida('');
+
+    router.push('/home/trabalhos');
+  } catch (error) {
+    console.error('Erro ao salvar os dados:', error);
+    toast.error('Erro ao salvar os dados.');
+  }
+};
 
   useEffect(() => {
     const fetchClientes = async () => {
@@ -153,6 +268,8 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
         const lista = snapshot.docs.map(doc => ({
           id: doc.id,
           nomeProduto: doc.data().nomeProduto,
+          unidadeMedida: doc.data().unidadeMedida,
+          quantidade: doc.data().quantidade,
         }));
         setProdutosDisponiveis(lista);
       } catch (error) {
@@ -404,13 +521,22 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                   id="produtos"
                   name="produtos"
                   className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                  onChange={(e) => setProdutos(e.target.value)}
-                  value={produtos}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+
+                    const selectedProduto = produtosDisponiveis.find(prod => prod.id === selectedId);
+
+                    setProdutos({ 
+                      id: selectedId, 
+                      produto: selectedProduto ? selectedProduto.nomeProduto : '' 
+                    });
+                  }}
+                  value={produtos.id}
                 >
                   <option>Selecione</option>
                   {produtosDisponiveis.map((produto) => (
-                    <option key={produto.id} value={produto.nomeProduto}>
-                      {produto.nomeProduto}
+                    <option key={produto.id} value={produto.id}>
+                      {produto.nomeProduto} - {produto.quantidade} {produto.unidadeMedida} disponíveis
                     </option>
                   ))}
                 </select>
@@ -437,14 +563,40 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
               </div>
             </div>
 
+            <div className="lg:col-span-2 sm:col-span-4 col-span-6">
+              <label htmlFor="unidadeMedida" className="block text-sm/6 font-medium text-gray-900">
+                Unidade de Medida
+              </label>
+              <div className="mt-2 grid grid-cols-1">
+                <select
+                  id="unidadeMedida"
+                  name="unidadeMedida"
+                  className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  onChange={(e) => setUnidadeMedida(e.target.value)}
+                  value={unidadeMedida}
+                >
+                  <option>Selecione</option>
+                  <option>und.</option>
+                  <option>gramas</option>
+                  <option>litros</option>
+                  <option>metros</option>
+                </select>
+                <ChevronDownIcon
+                  aria-hidden="true"
+                  className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+                />
+              </div>
+            </div>
+
             <div className="sm:col-span-1 col-span-6 flex items-end">
                 <button
                     type="button"
                     onClick={() => {
                         if (produtos && quantidadeProdutos) {
-                        setListaProdutos([...listaProdutos, { produto: produtos, quantidade: quantidadeProdutos }]);
-                        setProdutos('');
+                        setListaProdutos([...listaProdutos, {id: produtos.id, produto: produtos.produto, quantidade: quantidadeProdutos, unidadeMedida: unidadeMedida }]);
+                        setProdutos({ id: '', produto: '' });
                         setQuantidadeProdutos('');
+                        setUnidadeMedida('');
                         }
                     }}
                     className='bg-main-blue text-main-white rounded-md px-3 py-2 text-sm font-semibold shadow-xs hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
@@ -468,8 +620,13 @@ export default function NewEditTrabalhoForm({ trabalho }: Props) {
                   <tbody>
                   {listaProdutos.map((item, index) => (
                       <tr key={index} className="border border-gray-950 bg-third-white">
-                      <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.produto}</td>
-                      <td className='border border-gray-950 px-1 py-1 bg-third-white'>{item.quantidade}</td>
+                      <td className={`border px-1 py-1 bg-third-white ${
+                          estoqueInvalido.includes(item.produto) ? 'text-red-500' : 'border-gray-950'
+                        }`}>{item.produto}</td>
+                      <td className={`border px-1 py-1 bg-third-white ${
+                          estoqueInvalido.includes(item.produto) ? 'text-red-500' : 'border-gray-950'
+                        }`}
+                      >{item.quantidade} {item.unidadeMedida}</td>
                       <td className='border border-gray-950 px-1 py-1 bg-third-white text-center'>
                       <button
                           type="button"

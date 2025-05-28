@@ -15,6 +15,7 @@ interface Produto {
   dataCompra: string;
   localCompra?: string;
   quantidade: string;
+  unidadeMedida?: string;
   fornecedor?: {
     id: string;
     nomeFornecedor: string;

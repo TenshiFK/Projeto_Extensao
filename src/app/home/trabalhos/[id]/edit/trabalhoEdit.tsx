@@ -25,8 +25,10 @@ interface Trabalho {
   garantia: string;
   statusOrdem: string;
   produtos?: {
+    id: string;
     produto: string;
     quantidade: string;
+    unidadeMedida: string;
   }[];
   outros?: string;
   valorFrete?: string;

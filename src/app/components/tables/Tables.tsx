@@ -9,9 +9,10 @@ interface TableProps {
   onDelete: (id: string) => void;
   showExport?: boolean;
   onExport?: (id: string) => void;
+  isHistorico?: boolean;
 }
 
-export default function Table({ titlesHead, dataBody, basePath, onDelete, showExport, onExport }: TableProps) {
+export default function Table({ titlesHead, dataBody, basePath, onDelete, showExport, onExport, isHistorico }: TableProps) {
   const router = useRouter();
 
   const handleView = (id: string) => {
@@ -79,7 +80,9 @@ export default function Table({ titlesHead, dataBody, basePath, onDelete, showEx
                 <button onClick={() => handleView(String(item.id))} className="cursor-pointer">
                   <EyeIcon className="w-5 h-5 text-main-blue" />
                 </button>
-                <button onClick={() => handleEdit(item.id)} className="cursor-pointer">
+                <button onClick={() => handleEdit(item.id)} 
+                className={`cursor-pointer ${isHistorico ? "hidden" : ""}`}
+                >
                   <PencilSquareIcon className="w-5 h-5 text-main-blue" />
                 </button>
                 <button className="cursor-pointer" onClick={() => handleDelete(String(item.id))}>

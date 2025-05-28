@@ -14,6 +14,7 @@ interface Produto {
   dataCompra: string;
   localCompra?: string;
   quantidade: string;
+  unidadeMedida?: string;
   fornecedor?: {
     id: string;
     nomeFornecedor: string;
@@ -120,7 +121,7 @@ export default function ProdutoDetalhes() {
                 <div
                     className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
                   >
-                  {produto.dataCompra || " - "}
+                  {produto.dataCompra.split("-").reverse().join("/") || " - "}
                 </div>
               </div>
             </div>
@@ -146,7 +147,7 @@ export default function ProdutoDetalhes() {
                 <div
                     className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
                   >
-                  {produto.quantidade || " - "}
+                  {produto.quantidade || " - "} {produto.unidadeMedida || ""}
                 </div>
               </div>
             </div>
